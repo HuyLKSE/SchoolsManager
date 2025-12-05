@@ -19,13 +19,13 @@ const mapClassStatusToWorkspaceStatus = (status) => {
   return 'inactive';
 };
 
-export const ensureSchoolWorkspace = async (schoolId) => {
-  const schoolObjectId = typeof schoolId === 'object' && schoolId !== null && schoolId._id 
-    ? schoolId._id 
+export const ensureSchoolWorkspace = async (schoolId, session = null) => {
+  const schoolObjectId = typeof schoolId === 'object' && schoolId !== null && schoolId._id
+    ? schoolId._id
     : schoolId;
-  
-  const school = await School.findById(schoolObjectId);
-  
+
+  const school = await School.findById(schoolObjectId).session(session);
+
   if (!school) {
     throw new Error('School not found for workspace creation');
   }
@@ -38,7 +38,7 @@ export const ensureSchoolWorkspace = async (schoolId) => {
   });
 
   if (school.workspace?.workspaceId) {
-    const workspace = await Workspace.findById(school.workspace.workspaceId);
+    const workspace = await Workspace.findById(school.workspace.workspaceId).session(session);
     if (workspace) {
       return workspace;
     }
@@ -48,15 +48,15 @@ export const ensureSchoolWorkspace = async (schoolId) => {
     schoolId: school._id,
     type: 'school',
     linkedEntityId: school._id,
-  });
+  }).session(session);
 
   if (!existing) {
     const code = buildCode('SCH', school.schoolCode || school.schoolName);
     const path = buildPath([`school:${school._id.toString()}`]);
-    
+
     console.log('[DEBUG ensureSchoolWorkspace] Creating workspace with name:', school.schoolName);
-    
-    existing = await Workspace.create({
+
+    existing = new Workspace({
       type: 'school',
       schoolId: school._id,
       linkedEntityId: school._id,
@@ -70,6 +70,7 @@ export const ensureSchoolWorkspace = async (schoolId) => {
       },
       status: school.isActive ? 'active' : 'inactive',
     });
+    await existing.save({ session });
   }
 
   if (!school.workspace || school.workspace.workspaceId?.toString() !== existing._id.toString()) {

@@ -31,19 +31,21 @@ const joiOptions = {
 
 // ==================== AUTH SCHEMAS ====================
 export const registerSchema = Joi.object({
-  username: Joi.string().min(3).max(30).required(),
+  username: Joi.string().min(3).max(20).pattern(/^[a-zA-Z0-9_]+$/).required().messages({
+    'string.pattern.base': '{{#label}} chỉ được chứa chữ cái, số và dấu gạch dưới'
+  }),
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
-  confirmPassword: Joi.string().valid(Joi.ref('password')).optional(), // Optional validation
+  confirmPassword: Joi.string().valid(Joi.ref('password')).optional(),
   fullName: Joi.string().min(2).required(),
-  schoolName: Joi.string().min(3).max(200).required(), // NEW: Multi-tenant
-  requestedRole: Joi.string().valid('admin', 'teacher', 'student', 'parent', 'user').optional().default('user'), // NEW: Extended roles
+  schoolName: Joi.string().min(3).max(200).required(),
+  requestedRole: Joi.string().valid('admin', 'teacher', 'student', 'parent', 'user').optional().default('user'),
 });
 
 export const loginSchema = Joi.object({
   username: Joi.string().required(),
   password: Joi.string().required(),
-  schoolName: Joi.string().min(3).max(200).required(), // NEW: Multi-tenant
+  schoolName: Joi.string().min(3).max(200).required(),
 });
 
 export const refreshTokenSchema = Joi.object({
@@ -291,7 +293,7 @@ export const setReminderSchema = Joi.object({
 // ==================== VALIDATION MIDDLEWARE ====================
 export const validate = (schema) => {
   return (req, res, next) => {
-    const { error, value } = schema.validate(req.body, { 
+    const { error, value } = schema.validate(req.body, {
       abortEarly: false,
       stripUnknown: true,
       convert: true,

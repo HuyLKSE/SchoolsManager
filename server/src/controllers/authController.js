@@ -6,152 +6,123 @@ import {
   verifyRefreshToken,
 } from '../utils/jwt.js';
 import { successResponse, errorResponse } from '../utils/response.js';
+import { ROLES } from '../constants/roles.js';
+import * as SchoolService from '../services/schoolService.js';
+import * as UserService from '../services/userService.js';
 import { ensureSchoolWorkspace } from '../services/workspaceService.js';
+import { withTransactionRetry } from '../utils/transaction.js';
 
 export const register = async (req, res) => {
   try {
     const { username, email, password, fullName, schoolName, requestedRole } = req.body;
 
-    // DEBUG: Log received data
     console.log('📥 Register Request:', { username, email, fullName, schoolName, requestedRole });
 
-    // Validate required fields
-    if (!username || !email || !password || !fullName || !schoolName) {
-      console.log('❌ Missing fields:', { username, email, password: !!password, fullName, schoolName });
-      return errorResponse(res, 'Vui long dien day du thong tin bat buoc', 'MISSING_FIELDS', 400);
-    }
+    return await withTransactionRetry(async (session) => {
+      // 1. Find or create school
+      const { school, isNewSchool } = await SchoolService.findOrCreateSchool(schoolName, session);
 
-    // Validate schoolName
-    if (schoolName.trim().length < 3) {
-      return errorResponse(res, 'Ten truong phai co it nhat 3 ky tu', 'INVALID_SCHOOL_NAME', 400);
-    }
+      // 2. Check subscription
+      SchoolService.checkSubscription(school);
 
-    // Validate username format (only letters, numbers, underscore)
-    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
-      return errorResponse(res, 'Ten dang nhap chi duoc chua chu cai, so va dau gach duoi (3-20 ky tu)', 'INVALID_USERNAME', 400);
-    }
-
-    // Validate password strength
-    if (password.length < 6) {
-      return errorResponse(res, 'Mat khau phai co it nhat 6 ky tu', 'WEAK_PASSWORD', 400);
-    }
-
-    // Find or create school (Multi-tenant isolation)
-    let school = await School.findOne({
-      schoolName: { $regex: new RegExp(`^${schoolName.trim()}$`, 'i') }
-    });
-
-    let isNewSchool = false;
-    if (!school) {
-      // Create new school (first user will be admin)
-      school = new School({
-        schoolName: schoolName.trim(),
-        isActive: true,
-      });
-      await school.save();
-      isNewSchool = true;
-    }
-
-    // Check if subscription is active
-    if (!school.isSubscriptionActive()) {
-      return errorResponse(res, 'Truong da het han dang ky. Vui long lien he quan tri vien', 'SUBSCRIPTION_EXPIRED', 403);
-    }
-
-    try {
-      await ensureSchoolWorkspace(school);
-    } catch (workspaceError) {
-      console.error('Ensure school workspace failed:', workspaceError);
-      return errorResponse(res, 'Khong the khoi tao workspace cho truong', 'WORKSPACE_ERROR', 500);
-    }
-
-    // Check email duplicate WITHIN this school (workspace isolation)
-    const existingEmail = await User.findOne({
-      email,
-      schoolId: school._id
-    });
-    if (existingEmail) {
-      return errorResponse(res, 'Email da ton tai trong truong nay', 'EMAIL_EXISTS', 400);
-    }
-
-    // Check username duplicate WITHIN this school
-    const existingUsername = await User.findOne({
-      username,
-      schoolId: school._id
-    });
-    if (existingUsername) {
-      return errorResponse(res, 'Ten dang nhap da ton tai trong truong nay', 'USERNAME_EXISTS', 400);
-    }
-
-    // Determine role logic:
-    // 1. If new school (first user) -> MUST be admin
-    // 2. If existing school + requestedRole = 'admin' -> Need existing admin approval (default to user)
-    // 3. If existing school + requestedRole = 'user' -> user role
-    const userCount = await User.countDocuments({ schoolId: school._id });
-    let assignedRole;
-    let requiresApproval = false;
-
-    if (isNewSchool || userCount === 0) {
-      // First user of new school = admin automatically
-      assignedRole = 'admin';
-    } else {
-      // Existing school
-      if (requestedRole === 'admin') {
-        // Request admin role -> needs approval, default to inactive user
-        assignedRole = 'user';
-        requiresApproval = true;
-      } else if (requestedRole && ['teacher', 'student', 'parent'].includes(requestedRole)) {
-        // Assign requested role (teacher/student/parent need approval)
-        assignedRole = requestedRole;
-        requiresApproval = true;
-      } else {
-        // Regular user registration
-        assignedRole = 'user';
+      // 3. Ensure workspace exists
+      try {
+        // Assuming ensureSchoolWorkspace is a utility or helper function that might need the session
+        // If it's a service function, it should be called from SchoolService
+        await ensureSchoolWorkspace(school, session);
+      } catch (workspaceError) {
+        console.error('Ensure school workspace failed:', workspaceError);
+        // Throwing error here implies transaction abort
+        throw new Error('Khong the khoi tao workspace cho truong');
       }
-    }
 
-    const user = new User({
-      username,
-      email,
-      password, // Will be hashed in pre-save hook
-      fullName,
-      role: assignedRole,
-      schoolId: school._id,
-      isActive: !requiresApproval, // If requires approval, set inactive
-    });
-    await user.save();
+      // 4. Check duplicates
+      if (await UserService.checkEmailExists(email, school._id, session)) {
+        return errorResponse(res, 'Email da ton tai trong truong nay', 'EMAIL_EXISTS', 400);
+      }
+      if (await UserService.checkUsernameExists(username, school._id, session)) {
+        return errorResponse(res, 'Ten dang nhap da ton tai trong truong nay', 'USERNAME_EXISTS', 400);
+      }
 
-    // Update school statistics
-    if (assignedRole === 'admin') {
-      school.totalTeachers += 1;
-    }
-    await school.save();
+      // 5. Determine Role
+      const userCount = await UserService.countUsersInSchool(school._id, session);
+      let assignedRole;
+      let requiresApproval = false;
 
-    // Don't send password in response
-    const userResponse = user.toObject();
-    delete userResponse.password;
-    delete userResponse.refreshToken;
+      if (isNewSchool || userCount === 0) {
+        assignedRole = ROLES.ADMIN;
+      } else {
+        if (requestedRole === ROLES.ADMIN) {
+          assignedRole = ROLES.USER;
+          requiresApproval = true;
+        } else if (requestedRole && [ROLES.TEACHER, ROLES.STUDENT, ROLES.PARENT].includes(requestedRole)) {
+          assignedRole = requestedRole;
+          requiresApproval = true;
+        } else {
+          assignedRole = ROLES.USER;
+        }
+      }
 
-    return successResponse(
-      res,
-      {
-        user: userResponse,
-        school: {
-          _id: school._id,
-          schoolName: school.schoolName,
-          schoolCode: school.schoolCode,
+      // 6. Create User
+      const user = await UserService.createUser({
+        username,
+        email,
+        password,
+        fullName,
+        role: assignedRole,
+        schoolId: school._id,
+        isActive: !requiresApproval,
+      }, session);
+
+      // 7. Update school stats implementation detail (optional - moved to service if complex, otherwise keep here or ignore for now as it wasn't critical logic, but good to keep)
+      if (assignedRole === ROLES.ADMIN) {
+        school.totalTeachers += 1;
+        await school.save({ session });
+      }
+
+      // 8. Response
+      const userResponse = user.toObject();
+      delete userResponse.password;
+      delete userResponse.refreshToken;
+
+      return successResponse(
+        res,
+        {
+          user: userResponse,
+          school: {
+            _id: school._id,
+            schoolName: school.schoolName,
+            schoolCode: school.schoolCode,
+          },
+          isFirstUser: isNewSchool || userCount === 0,
+          requiresApproval,
         },
-        isFirstUser: isNewSchool || userCount === 0,
-        requiresApproval,
-      },
-      requiresApproval
-        ? 'Dang ky thanh cong! Tai khoan cua ban can duoc quan tri vien duyet truoc khi su dung.'
-        : (isNewSchool || userCount === 0)
-          ? 'Dang ky thanh cong! Ban la quan tri vien dau tien cua truong.'
-          : 'Dang ky thanh cong! Vui long dang nhap.',
-      201
-    );
+        requiresApproval
+          ? 'Dang ky thanh cong! Tai khoan cua ban can duoc quan tri vien duyet truoc khi su dung.'
+          : (isNewSchool || userCount === 0)
+            ? 'Dang ky thanh cong! Ban la quan tri vien dau tien cua truong.'
+            : 'Dang ky thanh cong! Vui long dang nhap.',
+        201
+      );
+    });
   } catch (error) {
     console.error('Register error:', error);
+    // If errorResponse was already returned inside transaction, we need to handle that.
+    // However, withTransactionRetry expects callback to return the result.
+    // If we return response inside callback, it passes through.
+    // But if we return response, we need to make sure we don't catch it as error.
+    // Wait, response object is not error.
+    // BUT if we throw error inside transaction (e.g. Workspace error), it goes here.
+
+    // Check if headers sent? No, we return response object from callback.
+    // Actually, `withTransactionRetry` returns whatever callback returns.
+    // If callback executed `res.status...`, then response is sent.
+    // We should ensure we don't send response twice.
+
+    // Better approach: Throw errors in service, handle response in controller catch block?
+    // OR: Check if `res.headersSent`.
+    if (res.headersSent) return;
+
     return errorResponse(res, error.message || 'Loi he thong khi dang ky', 'REGISTER_ERROR', 500);
   }
 };
@@ -159,11 +130,6 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { username, password, schoolName } = req.body;
-
-    // Validate schoolName
-    if (!schoolName || schoolName.trim().length < 3) {
-      return errorResponse(res, 'Vui long nhap ten truong', 'SCHOOL_NAME_REQUIRED', 400);
-    }
 
     // Find school (Multi-tenant isolation)
     console.log('Login attempt:', { username, schoolName });
@@ -257,7 +223,7 @@ export const login = async (req, res) => {
         },
         accessToken
       },
-      `Chao mung ${user.role === 'admin' ? 'Quan tri vien' : 'Nguoi dung'} ${user.fullName}!`
+      `Chao mung ${user.role === ROLES.ADMIN ? 'Quan tri vien' : 'Nguoi dung'} ${user.fullName}!`
     );
   } catch (error) {
     return errorResponse(res, error.message, 'LOGIN_ERROR', 500);

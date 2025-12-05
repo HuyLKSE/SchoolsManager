@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 30
+    },
+    "auditLog": "C:\\Users\\luuhu\\OneDrive\\Desktop\\QLHS\\server\\logs\\.0e0e79699aa62a0f4fdd064fd9225c0a69800dc2-audit.json",
+    "files": [
+        {
+            "date": 1764903290522,
+            "name": "C:\\Users\\luuhu\\OneDrive\\Desktop\\QLHS\\server\\logs\\error-2025-12-05.log",
+            "hash": "77f0816fafe4caab6037676a3730b4d7301b09daf0ecb1c613e554cee84228c5"
+        }
+    ],
+    "hashType": "sha256"
+}

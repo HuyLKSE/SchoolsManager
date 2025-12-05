@@ -57,37 +57,15 @@ const transports = [
     format: consoleFormat,
   }),
 
-  // File logging DISABLED by user request
-  // All logs will only show in console, not saved to files
-
-  // // Error log file (rotate daily, keep 30 days)
-  // new DailyRotateFile({
-  //   filename: path.join(__dirname, '../../logs/error-%DATE%.log'),
-  //   datePattern: 'YYYY-MM-DD',
-  //   level: 'error',
-  //   maxFiles: '30d',
-  //   maxSize: '20m',
-  //   format,
-  // }),
-
-  // // Combined log file (all levels)
-  // new DailyRotateFile({
-  //   filename: path.join(__dirname, '../../logs/combined-%DATE%.log'),
-  //   datePattern: 'YYYY-MM-DD',
-  //   maxFiles: '14d',
-  //   maxSize: '20m',
-  //   format,
-  // }),
-
-  // // HTTP access log
-  // new DailyRotateFile({
-  //   filename: path.join(__dirname, '../../logs/access-%DATE%.log'),
-  //   datePattern: 'YYYY-MM-DD',
-  //   level: 'http',
-  //   maxFiles: '7d',
-  //   maxSize: '20m',
-  //   format,
-  // }),
+  // Error log file (rotate daily, keep 30 days)
+  new DailyRotateFile({
+    filename: path.join(__dirname, '../../logs/error-%DATE%.log'),
+    datePattern: 'YYYY-MM-DD',
+    level: 'error',
+    maxFiles: '30d',
+    maxSize: '20m',
+    format,
+  }),
 ];
 
 // Create logger instance

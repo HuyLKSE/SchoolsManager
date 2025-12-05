@@ -13,7 +13,7 @@ export const config = {
     accessExpiry: process.env.JWT_ACCESS_EXPIRY || '24h',
     refreshExpiry: process.env.JWT_REFRESH_EXPIRY || '7d'
   },
-  cookieSecret: process.env.COOKIE_SECRET || 'dev-cookie-secret',
+  cookieSecret: process.env.COOKIE_SECRET,
   gemini: {
     apiKey: process.env.GEMINI_API_KEY
   },
@@ -29,3 +29,15 @@ export const config = {
     subject: process.env.VAPID_SUBJECT || 'mailto:admin@qlhs.vn'
   }
 };
+
+// Critical validation
+if (process.env.NODE_ENV === 'production') {
+  if (!config.mongoUri) throw new Error('❌ MONGODB_URI is required in production');
+  if (!config.cookieSecret) throw new Error('❌ COOKIE_SECRET is required in production');
+  if (!config.jwt.accessSecret) throw new Error('❌ JWT_ACCESS_SECRET is required in production');
+}
+
+if (!config.cookieSecret && process.env.NODE_ENV !== 'production') {
+  console.warn('⚠️ COOKIE_SECRET is missing. Using default dev secret. DO NOT USE IN PRODUCTION.');
+  config.cookieSecret = 'dev-cookie-secret';
+}
