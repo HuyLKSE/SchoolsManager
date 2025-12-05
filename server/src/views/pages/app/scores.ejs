@@ -1,0 +1,136 @@
+<%- include('../../partials/app-header', { user, currentPage: 'scores', title: 'Kết quả học tập' }) %>
+
+<section class="space-y-6">
+  <div class="section-heading">
+    <div>
+      <p class="text-sm text-text-muted uppercase tracking-wide">Học sinh</p>
+      <h1 class="text-2xl font-semibold">Kết quả học tập</h1>
+    </div>
+    <p class="text-sm text-text-muted">Cập nhật tự động từ bảng điểm của nhà trường</p>
+  </div>
+
+  <div id="scoresLoading" class="card text-center py-10">
+    <svg class="mx-auto h-8 w-8 animate-spin text-primary" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V2C5.373 2 0 7.373 0 14h4z"></path>
+    </svg>
+    <p class="text-sm text-text-muted mt-3">Đang tải điểm số...</p>
+  </div>
+
+  <div id="scoresContent" class="hidden space-y-4">
+    <div class="grid gap-3 md:grid-cols-4">
+      <div class="card border-l-4 border-primary">
+        <p class="text-sm text-text-muted uppercase tracking-wide">Môn học</p>
+        <p id="totalSubjects" class="text-3xl font-semibold mt-2">0</p>
+      </div>
+      <div class="card border-l-4 border-success">
+        <p class="text-sm text-text-muted uppercase tracking-wide">Điểm trung bình</p>
+        <p id="averageScore" class="text-3xl font-semibold mt-2">--</p>
+      </div>
+      <div class="card border-l-4 border-secondary">
+        <p class="text-sm text-text-muted uppercase tracking-wide">Điểm cao nhất</p>
+        <p id="highestScore" class="text-3xl font-semibold mt-2">--</p>
+      </div>
+      <div class="card border-l-4 border-warning">
+        <p class="text-sm text-text-muted uppercase tracking-wide">Điểm thấp nhất</p>
+        <p id="lowestScore" class="text-3xl font-semibold mt-2">--</p>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Môn học</th>
+            <th class="text-center">Học kỳ</th>
+            <th class="text-center">Miệng</th>
+            <th class="text-center">15 phút</th>
+            <th class="text-center">1 tiết</th>
+            <th class="text-center">Giữa kỳ</th>
+            <th class="text-center">Cuối kỳ</th>
+            <th class="text-center">TB môn</th>
+          </tr>
+        </thead>
+        <tbody id="scoresTableBody">
+          <tr>
+            <td colspan="8">
+              <div class="empty-state">
+                <p>Đang tải dữ liệu...</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="scoresError" class="card hidden text-center text-text-muted py-8">
+    <p>Chưa có điểm số nào được công bố.</p>
+  </div>
+</section>
+
+<script>
+  async function loadScores() {
+    try {
+      const res = await fetch('/api/v1/app/student/scores', { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch scores');
+
+      const result = await res.json();
+      const scores = result.data || [];
+
+      document.getElementById('scoresLoading').classList.add('hidden');
+
+      if (scores.length === 0) {
+        document.getElementById('scoresError').classList.remove('hidden');
+        return;
+      }
+
+      document.getElementById('scoresContent').classList.remove('hidden');
+
+      const subjectIds = new Set(scores.map(s => s.subjectId?._id || s.subjectId));
+      const finalScores = scores.filter(s => typeof s.finalScore === 'number');
+      const totalSubjects = subjectIds.size;
+      const averageScore = finalScores.length
+        ? finalScores.reduce((sum, s) => sum + s.finalScore, 0) / finalScores.length
+        : 0;
+      const highestScore = finalScores.length ? Math.max(...finalScores.map(s => s.finalScore)) : 0;
+      const lowestScore = finalScores.length ? Math.min(...finalScores.map(s => s.finalScore)) : 0;
+
+      document.getElementById('totalSubjects').textContent = totalSubjects;
+      document.getElementById('averageScore').textContent = finalScores.length ? averageScore.toFixed(2) : '--';
+      document.getElementById('highestScore').textContent = finalScores.length ? highestScore.toFixed(1) : '--';
+      document.getElementById('lowestScore').textContent = finalScores.length ? lowestScore.toFixed(1) : '--';
+
+      const tbody = document.getElementById('scoresTableBody');
+      tbody.innerHTML = scores.map(score => {
+        const finalScoreClass = score.finalScore >= 8 ? 'text-success' : score.finalScore >= 5 ? 'text-warning' : 'text-danger';
+        const finalScoreValue = typeof score.finalScore === 'number' ? score.finalScore.toFixed(1) : '--';
+
+        return `
+          <tr>
+            <td class="font-semibold text-text-dark">${score.subjectId?.subjectName || 'N/A'}</td>
+            <td class="text-center text-text-dark">HK ${score.semester || 1}</td>
+            <td class="text-center text-text-muted">${formatScores(score.oralScores)}</td>
+            <td class="text-center text-text-muted">${formatScores(score.fifteenMinScores)}</td>
+            <td class="text-center text-text-muted">${formatScores(score.oneHourScores)}</td>
+            <td class="text-center text-text-dark">${score.midtermScore || '--'}</td>
+            <td class="text-center text-text-dark">${score.finalScore || '--'}</td>
+            <td class="text-center font-semibold ${finalScoreClass}">${finalScoreValue}</td>
+          </tr>
+        `;
+      }).join('');
+    } catch (error) {
+      document.getElementById('scoresLoading').classList.add('hidden');
+      document.getElementById('scoresError').classList.remove('hidden');
+    }
+  }
+
+  function formatScores(scores) {
+    if (!scores || !Array.isArray(scores) || scores.length === 0) return '--';
+    return scores.join(', ');
+  }
+
+  loadScores();
+</script>
+
+<%- include('../../partials/app-footer') %>

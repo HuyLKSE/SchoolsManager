@@ -1,0 +1,127 @@
+<%- include('../../partials/app-header', { user, currentPage: 'attendance', title: 'Điểm danh' }) %>
+
+<section class="space-y-6">
+  <div class="section-heading">
+    <div>
+      <p class="text-sm text-text-muted uppercase tracking-wide">Học sinh</p>
+      <h1 class="text-2xl font-semibold">Điểm danh</h1>
+    </div>
+    <p class="text-sm text-text-muted">Theo dõi lịch sử chuyên cần của bạn</p>
+  </div>
+
+  <div id="attendanceLoading" class="card text-center py-10">
+    <svg class="mx-auto h-8 w-8 animate-spin text-primary" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V2C5.373 2 0 7.373 0 14h4z"></path>
+    </svg>
+    <p class="text-sm text-text-muted mt-3">Đang tải dữ liệu điểm danh...</p>
+  </div>
+
+  <div id="attendanceContent" class="hidden space-y-4">
+    <div class="grid gap-3 md:grid-cols-4">
+      <div class="card border-l-4 border-success">
+        <p class="text-sm text-text-muted uppercase tracking-wide">Có mặt</p>
+        <p id="presentCount" class="text-3xl font-semibold mt-2">0</p>
+      </div>
+      <div class="card border-l-4 border-danger">
+        <p class="text-sm text-text-muted uppercase tracking-wide">Vắng</p>
+        <p id="absentCount" class="text-3xl font-semibold mt-2">0</p>
+      </div>
+      <div class="card border-l-4 border-warning">
+        <p class="text-sm text-text-muted uppercase tracking-wide">Đi muộn / có phép</p>
+        <p id="lateCount" class="text-3xl font-semibold mt-2">0</p>
+      </div>
+      <div class="card border-l-4 border-secondary">
+        <p class="text-sm text-text-muted uppercase tracking-wide">Tỉ lệ chuyên cần</p>
+        <p id="attendanceRate" class="text-3xl font-semibold mt-2">0%</p>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Ngày</th>
+            <th>Lớp</th>
+            <th class="text-center">Trạng thái</th>
+            <th>Ghi chú</th>
+          </tr>
+        </thead>
+        <tbody id="attendanceTableBody">
+          <tr>
+            <td colspan="4">
+              <div class="empty-state">
+                <p>Đang tải dữ liệu...</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="attendanceError" class="card hidden text-center text-text-muted py-8">
+    <p>Chưa có bản ghi điểm danh nào.</p>
+  </div>
+</section>
+
+<script>
+  async function loadAttendance() {
+    try {
+      const res = await fetch('/api/v1/app/student/attendance', { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch attendance');
+
+      const result = await res.json();
+      const attendance = result.data || [];
+
+      document.getElementById('attendanceLoading').classList.add('hidden');
+
+      if (attendance.length === 0) {
+        document.getElementById('attendanceError').classList.remove('hidden');
+        return;
+      }
+
+      document.getElementById('attendanceContent').classList.remove('hidden');
+
+      const presentCount = attendance.filter(a => a.status === 'present').length;
+      const absentCount = attendance.filter(a => a.status === 'absent').length;
+      const lateCount = attendance.filter(a => a.status === 'late').length;
+      const totalCount = attendance.length;
+      const attendanceRate = totalCount > 0 ? ((presentCount + lateCount) / totalCount * 100).toFixed(1) : 0;
+
+      document.getElementById('presentCount').textContent = presentCount;
+      document.getElementById('absentCount').textContent = absentCount;
+      document.getElementById('lateCount').textContent = lateCount;
+      document.getElementById('attendanceRate').textContent = attendanceRate + '%';
+
+      const tbody = document.getElementById('attendanceTableBody');
+      tbody.innerHTML = attendance.map(record => {
+        const date = new Date(record.date).toLocaleDateString('vi-VN');
+        return `
+          <tr>
+            <td class="font-semibold text-text-dark">${date}</td>
+            <td class="text-text-dark">${record.classId?.className || '---'}</td>
+            <td class="text-center">${getStatusBadge(record.status)}</td>
+            <td class="text-text-muted">${record.notes || '--'}</td>
+          </tr>
+        `;
+      }).join('');
+    } catch (error) {
+      document.getElementById('attendanceLoading').classList.add('hidden');
+      document.getElementById('attendanceError').classList.remove('hidden');
+    }
+  }
+
+  function getStatusBadge(status) {
+    const badges = {
+      'present': '<span class="badge badge-success">Có mặt</span>',
+      'absent': '<span class="badge badge-danger">Vắng</span>',
+      'late': '<span class="badge badge-warning">Đi muộn</span>'
+    };
+    return badges[status] || '<span class="badge">---</span>';
+  }
+
+  loadAttendance();
+</script>
+
+<%- include('../../partials/app-footer') %>

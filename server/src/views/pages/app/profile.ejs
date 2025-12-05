@@ -1,0 +1,163 @@
+<%- include('../../partials/app-header', { user, currentPage: 'profile', title: 'Hồ sơ học sinh' }) %>
+
+<section class="space-y-6">
+  <div class="section-heading">
+    <div>
+      <p class="text-sm text-text-muted uppercase tracking-wide">Học sinh</p>
+      <h1 class="text-2xl font-semibold">Hồ sơ của tôi</h1>
+    </div>
+    <p class="text-sm text-text-muted">Thông tin chỉ hiển thị khi tài khoản đã được liên kết</p>
+  </div>
+
+  <div id="profileLoading" class="card text-center py-10">
+    <svg class="mx-auto h-8 w-8 animate-spin text-primary" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V2C5.373 2 0 7.373 0 14h4z"></path>
+    </svg>
+    <p class="text-sm text-text-muted mt-3">Đang tải thông tin...</p>
+  </div>
+
+  <div id="profileContent" class="hidden space-y-4">
+    <div class="card">
+      <h2 class="text-lg font-semibold mb-4">Thông tin cá nhân</h2>
+      <div class="grid gap-4 md:grid-cols-2 text-sm">
+        <div>
+          <p class="text-text-muted">Mã học sinh</p>
+          <p id="studentCode" class="font-semibold text-text-dark">--</p>
+        </div>
+        <div>
+          <p class="text-text-muted">Họ và tên</p>
+          <p id="fullName" class="font-semibold text-text-dark">--</p>
+        </div>
+        <div>
+          <p class="text-text-muted">Ngày sinh</p>
+          <p id="dateOfBirth" class="text-text-dark">--</p>
+        </div>
+        <div>
+          <p class="text-text-muted">Giới tính</p>
+          <p id="gender" class="text-text-dark">--</p>
+        </div>
+        <div>
+          <p class="text-text-muted">Lớp</p>
+          <p id="className" class="text-text-dark">--</p>
+        </div>
+        <div>
+          <p class="text-text-muted">Trạng thái</p>
+          <p id="status" class="text-text-dark">--</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="text-lg font-semibold mb-4">Liên hệ</h2>
+      <div class="grid gap-4 md:grid-cols-2 text-sm">
+        <div>
+          <p class="text-text-muted">Số điện thoại</p>
+          <p id="phone" class="text-text-dark">--</p>
+        </div>
+        <div>
+          <p class="text-text-muted">Email</p>
+          <p id="email" class="text-text-dark">--</p>
+        </div>
+        <div class="md:col-span-2">
+          <p class="text-text-muted">Địa chỉ</p>
+          <p id="address" class="text-text-dark">--</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="text-lg font-semibold mb-4">Phụ huynh</h2>
+      <div class="grid gap-4 md:grid-cols-2 text-sm">
+        <div>
+          <p class="text-text-muted">Tên phụ huynh</p>
+          <p id="guardianName" class="text-text-dark">--</p>
+        </div>
+        <div>
+          <p class="text-text-muted">Quan hệ</p>
+          <p id="guardianRelationship" class="text-text-dark">--</p>
+        </div>
+        <div>
+          <p class="text-text-muted">Số điện thoại</p>
+          <p id="guardianPhone" class="text-text-dark">--</p>
+        </div>
+        <div>
+          <p class="text-text-muted">Email</p>
+          <p id="guardianEmail" class="text-text-dark">--</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="text-lg font-semibold mb-2">Ghi chú</h2>
+      <p id="notes" class="text-sm text-text-dark">--</p>
+    </div>
+  </div>
+
+  <div id="profileError" class="card hidden text-center text-text-muted py-8">
+    <p>Không thể tải dữ liệu hồ sơ. Vui lòng thử lại sau.</p>
+  </div>
+</section>
+
+<script>
+  async function loadProfile() {
+    try {
+      const res = await fetch('/api/v1/app/student/profile', { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch profile');
+
+      const result = await res.json();
+      const student = result.data;
+
+      document.getElementById('profileLoading').classList.add('hidden');
+
+      if (!student) {
+        document.getElementById('profileError').classList.remove('hidden');
+        return;
+      }
+
+      document.getElementById('profileContent').classList.remove('hidden');
+
+      document.getElementById('studentCode').textContent = student.studentCode || '--';
+      document.getElementById('fullName').textContent = student.fullName || '--';
+      document.getElementById('dateOfBirth').textContent = student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString('vi-VN') : '--';
+      document.getElementById('gender').textContent = student.gender || '--';
+      document.getElementById('className').textContent = student.classId ? `${student.classId.className} (${student.classId.classCode})` : '--';
+      document.getElementById('phone').textContent = student.phone || '--';
+      document.getElementById('email').textContent = student.email || '--';
+
+      if (typeof student.address === 'string') {
+        document.getElementById('address').textContent = student.address || '--';
+      } else if (student.address && typeof student.address === 'object') {
+        const addr = [student.address.street, student.address.ward, student.address.district, student.address.city].filter(Boolean).join(', ');
+        document.getElementById('address').textContent = addr || '--';
+      } else {
+        document.getElementById('address').textContent = '--';
+      }
+
+      if (student.guardian) {
+        document.getElementById('guardianName').textContent = student.guardian.name || '--';
+        document.getElementById('guardianRelationship').textContent = student.guardian.relationship || '--';
+        document.getElementById('guardianPhone').textContent = student.guardian.phone || '--';
+        document.getElementById('guardianEmail').textContent = student.guardian.email || '--';
+      }
+
+      document.getElementById('notes').textContent = student.notes || 'Không có ghi chú';
+
+      const statusMap = {
+        'active': { text: 'Đang học', className: 'badge badge-success' },
+        'suspended': { text: 'Nghỉ học', className: 'badge badge-warning' },
+        'transferred': { text: 'Chuyển trường', className: 'badge badge-info' },
+        'graduated': { text: 'Tốt nghiệp', className: 'badge badge-info' }
+      };
+      const statusInfo = statusMap[student.status] || { text: student.status || '--', className: 'badge' };
+      document.getElementById('status').innerHTML = `<span class="${statusInfo.className}">${statusInfo.text}</span>`;
+    } catch (error) {
+      document.getElementById('profileLoading').classList.add('hidden');
+      document.getElementById('profileError').classList.remove('hidden');
+    }
+  }
+
+  loadProfile();
+</script>
+
+<%- include('../../partials/app-footer') %>

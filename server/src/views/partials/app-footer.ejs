@@ -1,0 +1,33 @@
+    </main>
+  </div>
+
+  <script>
+    window.APP_CONTEXT = Object.freeze({
+      role: '<%= user.role %>',
+      permissions: <%- JSON.stringify(user.permissions || {}) %>,
+      username: '<%= user.username %>',
+      fullName: '<%= (user.fullName || '').replace(/'/g, "\\'") %>'
+    });
+
+    async function logout() {
+      if (!confirm('Bạn chắc chắn muốn đăng xuất?')) {
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/v1/auth/logout', {
+          method: 'POST',
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          throw new Error('Logout failed');
+        }
+        window.location.href = '/login';
+      } catch (error) {
+        alert('Không thể đăng xuất. Vui lòng thử lại.');
+      }
+    }
+  </script>
+</body>
+</html>

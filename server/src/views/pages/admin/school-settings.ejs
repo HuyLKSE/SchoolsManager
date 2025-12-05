@@ -1,0 +1,224 @@
+<%- include('../../partials/dashboard-layout-header', { title: 'Cài đặt Trường', user }) %>
+
+<!-- Page Header -->
+<div class="mb-8">
+  <h1 class="text-3xl font-bold text-gray-900">Cài Đặt Trường</h1>
+  <p class="mt-2 text-gray-600">Quản lý thông tin và cấu hình nhà trường</p>
+</div>
+
+<!-- Settings Form -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- Main Settings -->
+  <div class="lg:col-span-2">
+    <form id="schoolSettingsForm" class="bg-white rounded-lg shadow p-6 space-y-6">
+      <!-- School Name -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          <%- icon('building-library', 'w-4 h-4 inline mr-1') %> Tên Trường
+        </label>
+        <input 
+          type="text" 
+          name="schoolName" 
+          value="<%= school.schoolName %>" 
+          required
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+        >
+      </div>
+
+      <!-- Address -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Địa Chỉ</label>
+        <input 
+          type="text" 
+          name="address" 
+          value="<%= school.address || '' %>" 
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+        >
+      </div>
+
+      <!-- Contact Info -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Điện Thoại</label>
+          <input 
+            type="tel" 
+            name="phone" 
+            value="<%= school.phone || '' %>" 
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          >
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+          <input 
+            type="email" 
+            name="email" 
+            value="<%= school.email || '' %>" 
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          >
+        </div>
+      </div>
+
+      <!-- Principal -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Hiệu Trưởng</label>
+        <input 
+          type="text" 
+          name="principalName" 
+          value="<%= school.principalName || '' %>" 
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+        >
+      </div>
+
+      <!-- Website -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Website</label>
+        <input 
+          type="url" 
+          name="website" 
+          value="<%= school.website || '' %>" 
+          placeholder="Nhập URL logo trường"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+        >
+      </div>
+
+      <!-- Academic Year -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Năm Học</label>
+          <input 
+            type="text" 
+            name="academicYear" 
+            value="<%= school.settings.academicYear || '' %>" 
+            placeholder="Nhập năm học"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          >
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Khối Học (cách nhau bằng dấu phẩy)</label>
+          <input 
+            type="text" 
+            name="grades" 
+            value="<%= school.settings.grades.join(', ') %>" 
+            placeholder="Nhập các khối (cách nhau bởi dấu phẩy)"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          >
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="flex items-center justify-end space-x-4 pt-4 border-t">
+        <button 
+          type="button" 
+          onclick="window.history.back()" 
+          class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+        >
+          Hủy
+        </button>
+        <button 
+          type="submit" 
+          class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center"
+        >
+          <%- icon('check-circle', 'h-5 w-5 mr-2') %>
+          Lưu Thay Đổi
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Subscription Info -->
+  <div class="lg:col-span-1">
+    <div class="bg-white rounded-lg shadow p-6 space-y-6">
+      <h3 class="text-lg font-semibold text-gray-900">Thông Tin Đăng Ký</h3>
+      
+      <!-- Status Badge -->
+      <div>
+        <p class="text-sm text-gray-600 mb-2">Trạng Thái</p>
+        <span class="px-3 py-1 inline-flex text-sm font-semibold rounded-full 
+          <%= school.subscription.status === 'active' ? 'bg-green-100 text-green-800' : 
+              school.subscription.status === 'trial' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800' %>">
+          <%= school.subscription.status === 'active' ? 'Đang hoạt động' : 
+              school.subscription.status === 'trial' ? 'Dùng thử' : 'Hết hạn' %>
+        </span>
+      </div>
+
+      <!-- Plan -->
+      <div>
+        <p class="text-sm text-gray-600 mb-2">Gói</p>
+        <p class="text-base font-semibold text-gray-900 capitalize"><%= school.subscription.plan %></p>
+      </div>
+
+      <!-- Dates -->
+      <div>
+        <p class="text-sm text-gray-600 mb-2">Ngày Bắt Đầu</p>
+        <p class="text-base text-gray-900"><%= new Date(school.subscription.startDate).toLocaleDateString('vi-VN') %></p>
+      </div>
+
+      <div>
+        <p class="text-sm text-gray-600 mb-2">Ngày Hết Hạn</p>
+        <p class="text-base text-gray-900 font-semibold 
+          <%= new Date(school.subscription.endDate) < new Date() ? 'text-red-600' : '' %>">
+          <%= new Date(school.subscription.endDate).toLocaleDateString('vi-VN') %>
+        </p>
+      </div>
+
+      <!-- User Limit -->
+      <div>
+        <p class="text-sm text-gray-600 mb-2">Giới Hạn Người Dùng</p>
+        <p class="text-base text-gray-900">
+          <%= school.subscription.maxUsers === Infinity || school.subscription.maxUsers === 0 ? 'Không giới hạn' : school.subscription.maxUsers + ' người' %>
+        </p>
+      </div>
+
+      <!-- Upgrade Button -->
+      <button 
+        onclick="alert('Chức năng nâng cấp gói sẽ được triển khai sau')" 
+        class="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+      >
+        Nâng Cấp Gói
+      </button>
+    </div>
+
+    <!-- School Stats -->
+    <div class="bg-white rounded-lg shadow p-6 mt-6 space-y-3">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Thống Kê Nhanh</h3>
+      <div class="flex justify-between">
+        <span class="text-sm text-gray-600">Ngày tạo:</span>
+        <span class="text-sm font-medium text-gray-900"><%= new Date(school.createdAt).toLocaleDateString('vi-VN') %></span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-sm text-gray-600">Mã trường:</span>
+        <span class="text-sm font-mono text-gray-900"><%= school._id.toString().slice(-8).toUpperCase() %></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('schoolSettingsForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const formData = new FormData(e.target);
+  const data = Object.fromEntries(formData);
+  
+  try {
+    const response = await fetch('/api/v1/admin/school-settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok) {
+      window.showToast('Cập nhật thông tin trường thành công', 'success');
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      window.showToast(result.error?.message || 'Lỗi cập nhật', 'error');
+    }
+  } catch (error) {
+    window.showToast('Lỗi kết nối máy chủ', 'error');
+  }
+});
+</script>
+
+<%- include('../../partials/dashboard-layout-footer') %>

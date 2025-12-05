@@ -1,0 +1,274 @@
+<%- include('../partials/dashboard-layout-header', { title: 'Chi tiết học sinh' }) %>
+
+<section class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <a href="/students" class="p-2 hover:bg-gray-100 rounded-lg">
+        <%- icon('arrow-left', 'h-5 w-5') %>
+      </a>
+      <div>
+        <h1 class="text-2xl font-bold" id="studentName">Đang tải...</h1>
+        <p class="text-sm text-text-muted" id="studentCode"></p>
+      </div>
+    </div>
+    <div class="flex gap-2" id="actionButtons" style="display:none;">
+      <a href="/students/<%= studentId %>/edit" class="btn btn-primary">
+        <%- icon('pencil', 'h-4 w-4') %>
+        Chỉnh sửa
+      </a>
+      <button onclick="confirmDelete()" class="btn btn-danger">
+        <%- icon('trash', 'h-4 w-4') %>
+        Xóa
+      </button>
+    </div>
+  </div>
+
+  <!-- Student Details -->
+  <div class="grid gap-6 lg:grid-cols-3">
+    <!-- Basic Info Card -->
+    <div class="lg:col-span-2 space-y-6">
+      <div class="bg-white rounded-xl shadow-sm p-6">
+        <h3 class="text-lg font-semibold mb-4 pb-2 border-b flex items-center gap-2">
+          <%- icon('user', 'h-5 w-5 text-primary-600') %>
+          Thông tin cơ bản
+        </h3>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div>
+            <p class="text-sm text-gray-500">Họ và tên</p>
+            <p class="font-semibold" id="detailFullName">--</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Mã học sinh</p>
+            <p class="font-semibold" id="detailStudentCode">--</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Ngày sinh</p>
+            <p class="font-semibold" id="detailDateOfBirth">--</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Giới tính</p>
+            <p class="font-semibold" id="detailGender">--</p>
+          </div>
+          <div class="md:col-span-2">
+            <p class="text-sm text-gray-500">Địa chỉ</p>
+            <p class="font-semibold" id="detailAddress">--</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Số điện thoại</p>
+            <p class="font-semibold" id="detailPhone">--</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Email</p>
+            <p class="font-semibold" id="detailEmail">--</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Guardian Info Card -->
+      <div class="bg-white rounded-xl shadow-sm p-6">
+        <h3 class="text-lg font-semibold mb-4 pb-2 border-b flex items-center gap-2">
+          <%- icon('users', 'h-5 w-5 text-secondary-600') %>
+          Thông tin phụ huynh
+        </h3>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div>
+            <p class="text-sm text-gray-500">Tên phụ huynh</p>
+            <p class="font-semibold" id="detailGuardianName">--</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Quan hệ</p>
+            <p class="font-semibold" id="detailGuardianRelationship">--</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Số điện thoại</p>
+            <p class="font-semibold" id="detailGuardianPhone">--</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Email</p>
+            <p class="font-semibold" id="detailGuardianEmail">--</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Academic History Card -->
+      <div class="bg-white rounded-xl shadow-sm p-6">
+        <h3 class="text-lg font-semibold mb-4 pb-2 border-b flex items-center gap-2">
+          <%- icon('academic-cap', 'h-5 w-5 text-accent-600') %>
+          Lịch sử học tập
+        </h3>
+        <div class="space-y-3">
+          <div>
+            <p class="text-sm text-gray-500">Lớp hiện tại</p>
+            <p class="font-semibold text-lg" id="detailClass">--</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Trạng thái</p>
+            <p id="detailStatus">--</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Ghi chú</p>
+            <p class="text-gray-700" id="detailNotes">--</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats & Quick Info Sidebar -->
+    <div class="space-y-6">
+      <!-- Quick Stats -->
+      <div class="bg-white rounded-xl shadow-sm p-6">
+        <h3 class="text-lg font-semibold mb-4 pb-2 border-b">Thống kê nhanh</h3>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <%- icon('calendar', 'h-5 w-5 text-blue-600') %>
+              <span class="text-sm">Điểm danh tháng này</span>
+            </div>
+            <span class="font-bold text-blue-600" id="statAttendance">--</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <%- icon('chart-bar', 'h-5 w-5 text-green-600') %>
+              <span class="text-sm">Điểm TB học kỳ</span>
+            </div>
+            <span class="font-bold text-green-600" id="statGPA">--</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <%- icon('banknotes', 'h-5 w-5 text-orange-600') %>
+              <span class="text-sm">Học phí chưa đóng</span>
+            </div>
+            <span class="font-bold text-orange-600" id="statUnpaidFees">--</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activities -->
+      <div class="bg-white rounded-xl shadow-sm p-6">
+        <h3 class="text-lg font-semibold mb-4 pb-2 border-b">Hoạt động gần đây</h3>
+        <div class="space-y-3" id="recentActivities">
+          <p class="text-sm text-gray-500">Đang tải...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const studentId = '<%= studentId %>';
+  const userPermissions = {
+    canUpdate: <%= user?.hasPermission?.('canUpdate') || false %>,
+    canDelete: <%= user?.hasPermission?.('canDelete') || false %>
+  };
+
+  async function loadStudentDetails() {
+    try {
+      const res = await fetch(`/api/v1/students/${studentId}`, { credentials: 'include' });
+      if (!res.ok) {
+        alert('Không tìm thấy học sinh');
+        window.location.href = '/students';
+        return;
+      }
+
+      const data = await res.json();
+      const student = data.data;
+
+      // Update header
+      document.getElementById('studentName').textContent = student.fullName;
+      document.getElementById('studentCode').textContent = `Mã HS: ${student.studentCode}`;
+
+      // Show action buttons based on permissions
+      if (userPermissions.canUpdate || userPermissions.canDelete) {
+        document.getElementById('actionButtons').style.display = 'flex';
+        if (!userPermissions.canDelete) {
+          document.querySelector('#actionButtons button').style.display = 'none';
+        }
+      }
+
+      // Fill basic info
+      document.getElementById('detailFullName').textContent = student.fullName;
+      document.getElementById('detailStudentCode').textContent = student.studentCode;
+      document.getElementById('detailDateOfBirth').textContent = student.dateOfBirth 
+        ? new Date(student.dateOfBirth).toLocaleDateString('vi-VN') 
+        : '--';
+      
+      const genderMap = { male: 'Nam', female: 'Nữ', other: 'Khác' };
+      document.getElementById('detailGender').textContent = genderMap[student.gender] || '--';
+      document.getElementById('detailAddress').textContent = student.address || '--';
+      document.getElementById('detailPhone').textContent = student.phone || '--';
+      document.getElementById('detailEmail').textContent = student.email || '--';
+
+      // Fill guardian info
+      if (student.guardian) {
+        document.getElementById('detailGuardianName').textContent = student.guardian.name || '--';
+        const relationMap = { father: 'Bố', mother: 'Mẹ', grandparent: 'Ông/Bà', other: 'Khác' };
+        document.getElementById('detailGuardianRelationship').textContent = relationMap[student.guardian.relationship] || '--';
+        document.getElementById('detailGuardianPhone').textContent = student.guardian.phone || '--';
+        document.getElementById('detailGuardianEmail').textContent = student.guardian.email || '--';
+      }
+
+      // Fill academic info
+      document.getElementById('detailClass').textContent = student.classId?.name || 'Chưa phân lớp';
+      
+      const statusMap = { 
+        active: 'Đang học', 
+        suspended: 'Đình chỉ', 
+        transferred: 'Chuyển trường', 
+        graduated: 'Đã tốt nghiệp' 
+      };
+      const statusClass = {
+        active: 'badge badge-success',
+        suspended: 'badge badge-warning',
+        transferred: 'badge badge-danger',
+        graduated: 'badge badge-info'
+      };
+      const statusEl = document.getElementById('detailStatus');
+      statusEl.innerHTML = `<span class="${statusClass[student.status]}">${statusMap[student.status] || student.status}</span>`;
+      
+      document.getElementById('detailNotes').textContent = student.notes || 'Không có ghi chú';
+
+      // Load stats
+      loadStats();
+    } catch (error) {
+      console.error('Lỗi tải thông tin học sinh:', error);
+      alert('Lỗi kết nối đến server');
+    }
+  }
+
+  async function loadStats() {
+    document.getElementById('statAttendance').textContent = '--';
+    document.getElementById('statGPA').textContent = '--';
+    document.getElementById('statUnpaidFees').textContent = '--';
+    document.getElementById('recentActivities').innerHTML = '<p class="text-sm text-gray-500">Chưa có hoạt động</p>';
+  }
+
+  async function confirmDelete() {
+    if (!confirm('Bạn có chắc muốn xóa học sinh này?\n\nThao tác này không thể hoàn tác!')) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/v1/students/${studentId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (res.ok) {
+        alert('✅ Xóa học sinh thành công');
+        window.location.href = '/students';
+      } else {
+        const error = await res.json();
+        alert('❌ Lỗi: ' + (error.error?.message || 'Không thể xóa học sinh'));
+      }
+    } catch (error) {
+      console.error('Lỗi xóa học sinh:', error);
+      alert('❌ Lỗi kết nối đến server');
+    }
+  }
+
+  // Initialize
+  loadStudentDetails();
+</script>
+
+<%- include('../partials/dashboard-layout-footer') %>

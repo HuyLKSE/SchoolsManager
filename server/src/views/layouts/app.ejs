@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title || 'Trang chủ' %> - QLHS</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    :root {
+      --page-bg: #f7f8fc;
+      --surface: #ffffff;
+      --border: #e5e7eb;
+      --text: #0f172a;
+      --muted: #64748b;
+      --primary: #2563eb;
+      --primary-soft: #e3edff;
+      --danger: #dc2626;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: var(--page-bg);
+      color: var(--text);
+    }
+    .app-navbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      gap: 10px;
+    }
+    .app-navbar-brand { display: flex; align-items: center; gap: 12px; }
+    .app-navbar-brand h1 { font-size: 22px; font-weight: 600; color: var(--primary); }
+    .app-navbar-role {
+      padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; text-transform: capitalize;
+      background: var(--primary-soft); color: var(--primary);
+    }
+    .role-teacher { background: #e0ecff; color: #1d4ed8; }
+    .role-student { background: #dcfce7; color: #15803d; }
+    .role-parent { background: #fdf2f8; color: #be185d; }
+    .role-user { background: #e2e8f0; color: #334155; }
+    .mode-chip {
+      display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px;
+      border-radius: 999px; border: 1px solid var(--border); background: #f8fafc; font-weight: 600; font-size: 12px;
+    }
+    .mode-action {
+      display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px;
+      border-radius: 10px; text-decoration: none; font-weight: 700;
+      background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0;
+    }
+    .mode-action:hover { background: #bbf7d0; }
+    .app-navbar-user { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+    .app-user-avatar {
+      width: 40px; height: 40px; border-radius: 50%; background: #e2e8f0;
+      display: flex; align-items: center; justify-content: center; color: #0f172a; font-weight: 600;
+    }
+    .logout-btn {
+      padding: 8px 16px; background: var(--danger); color: white; border: none; border-radius: 6px;
+      cursor: pointer; font-size: 14px; transition: background 0.15s ease;
+    }
+    .logout-btn:hover { background: #b91c1c; }
+    .app-container { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
+    .app-menu { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+    .app-menu-item {
+      padding: 10px 16px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; text-decoration: none; color: var(--text); font-weight: 500;
+      display: flex; align-items: center; gap: 8px;
+      transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+    .app-menu-item:hover { border-color: var(--primary); color: var(--primary); }
+    .app-menu-item.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .app-menu-icon { width: 20px; height: 20px; }
+    .app-content { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); padding: 24px; min-height: 500px; }
+  </style>
+</head>
+<body>
+  <!-- Top Navigation -->
+  <nav class="app-navbar">
+    <div class="app-navbar-brand">
+      <h1>dYZ" QLHS</h1>
+      <span class="app-navbar-role role-<%= user.role %>">
+        <% if (user.role === 'teacher') { %>
+          Giáo viên
+        <% } else if (user.role === 'student') { %>
+          Học sinh
+        <% } else if (user.role === 'parent') { %>
+          Phụ huynh
+        <% } else { %>
+          <%= user.role %>
+        <% } %>
+      </span>
+      <span class="mode-chip">Chế độ quản lý</span>
+    </div>
+    
+    <div class="app-navbar-user">
+      <% if (user && (user.englishProfile?.enabled || user.role === 'admin' || user.role === 'teacher')) { %>
+        <a class="mode-action" href="/english/dashboard">Chuyển chế độ học</a>
+      <% } %>
+      <div class="app-user-avatar">
+        <%= user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U' %>
+      </div>
+      <div>
+        <div style="font-weight: 600; color: #111827;"><%= user.fullName || 'User' %></div>
+        <div style="font-size: 13px; color: #6b7280;"><%= user.username %></div>
+      </div>
+      <button onclick="logout()" class="logout-btn">Đăng xuất</button>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <div class="app-container">
+    <!-- Quick Menu -->
+    <div class="app-menu">
+      <a href="/app/home" class="app-menu-item <%= (currentPage === 'home' ? 'active' : '') %>">
+        <svg class="app-menu-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+        Trang chủ
+      </a>
+      
+      <% if (user.role === 'teacher') { %>
+        <a href="/app/classes" class="app-menu-item <%= (currentPage === 'classes' ? 'active' : '') %>">
+          <svg class="app-menu-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+          Lớp học của tôi
+        </a>
+        <a href="/app/schedule" class="app-menu-item <%= (currentPage === 'schedule' ? 'active' : '') %>">
+          <svg class="app-menu-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          Thời khóa biểu
+        </a>
+      <% } %>
+      
+      <% if (user.role === 'student') { %>
+        <a href="/app/profile" class="app-menu-item <%= (currentPage === 'profile' ? 'active' : '') %>">
+          <svg class="app-menu-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+          Hồ sơ của tôi
+        </a>
+        <a href="/app/scores" class="app-menu-item <%= (currentPage === 'scores' ? 'active' : '') %>">
+          <svg class="app-menu-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          Điểm số
+        </a>
+        <a href="/app/attendance" class="app-menu-item <%= (currentPage === 'attendance' ? 'active' : '') %>">
+          <svg class="app-menu-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+          Điểm danh
+        </a>
+      <% } %>
+      
+      <% if (user.role === 'parent') { %>
+        <a href="/app/children" class="app-menu-item <%= (currentPage === 'children' ? 'active' : '') %>">
+          <svg class="app-menu-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+          Con em của tôi
+        </a>
+      <% } %>
+    </div>
+
+    <!-- Content Area -->
+    <div class="app-content">
+      <%- body %>
+    </div>
+  </div>
+
+  <script>
+    async function logout() {
+      if (confirm('Bạn có chắc muốn đăng xuất?')) {
+        try {
+          await fetch('/api/v1/auth/logout', { method: 'POST', credentials: 'include' });
+          window.location.href = '/login';
+        } catch (error) {
+          alert('Lỗi đăng xuất. Vui lòng thử lại.');
+        }
+      }
+    }
+  </script>
+</body>
+</html>

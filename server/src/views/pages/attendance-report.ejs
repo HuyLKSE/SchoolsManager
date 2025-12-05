@@ -1,0 +1,221 @@
+<%- include('../partials/dashboard-layout-header', { title: 'Báo cáo chuyên cần' }) %>
+
+<section class="space-y-6">
+  <div class="section-heading">
+    <div>
+      <p class="text-sm text-text-muted uppercase tracking-wide">Điểm danh</p>
+      <h2 class="text-2xl font-bold">Báo cáo chuyên cần theo lớp</h2>
+    </div>
+  </div>
+
+  <div class="card">
+    <form id="reportForm" class="grid gap-4 lg:grid-cols-5">
+      <select name="classId" id="classSelect" class="form-control lg:col-span-2" required>
+        <option value="">-- Chọn lớp học --</option>
+      </select>
+      <input type="date" name="startDate" id="startDate" class="form-control" required />
+      <input type="date" name="endDate" id="endDate" class="form-control" required />
+      <button type="submit" class="btn btn-primary justify-center">Xem báo cáo</button>
+    </form>
+  </div>
+
+  <div id="classInfo" class="glass-panel hidden rounded-3xl p-5">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <p class="text-sm text-text-muted uppercase">Lớp học</p>
+        <h3 class="text-xl font-bold" id="className">--</h3>
+      </div>
+      <div class="text-right">
+        <p class="text-sm text-text-muted">GVCN</p>
+        <p class="text-lg font-semibold" id="teacherName">--</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="reportTableContainer" class="hidden space-y-5">
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="stat-card">
+        <div class="stat-value" id="avgAttendanceRate">0%</div>
+        <p class="stat-label">Trung bình chuyên cần</p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="totalStudents">0</div>
+        <p class="stat-label">Tổng học sinh</p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="totalSessions">0</div>
+        <p class="stat-label">Tổng buổi</p>
+      </div>
+    </div>
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div id="statusBreakdown" class="text-xs text-text-muted"></div>
+      <div class="flex gap-2">
+        <button type="button" class="btn btn-secondary" onclick="downloadReport()">Xuất CSV</button>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>STT</th>
+            <th>Mã HS</th>
+            <th>Họ tên</th>
+            <th>Tổng</th>
+            <th>Có mặt</th>
+            <th>Vắng phép</th>
+            <th>Vắng không phép</th>
+            <th>Đi muộn</th>
+            <th>% Chuyên cần</th>
+          </tr>
+        </thead>
+        <tbody id="reportList"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<script>
+  const today = new Date();
+  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+  document.getElementById('startDate').valueAsDate = firstDay;
+  document.getElementById('endDate').valueAsDate = today;
+
+  loadClasses();
+
+  document.getElementById('reportForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const classId = document.getElementById('classSelect').value;
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    if (!classId || !startDate || !endDate) return;
+    await loadReport(classId, startDate, endDate);
+  });
+
+  async function loadClasses() {
+    try {
+      const response = await fetch('/api/v1/classes?limit=100&status=Đang hoạt động', { credentials: 'include' });
+      if (!response.ok) return;
+      const result = await response.json();
+      const select = document.getElementById('classSelect');
+      result.data.forEach((c) => {
+        const option = document.createElement('option');
+        option.value = c._id;
+        option.textContent = `${c.className} - Khối ${c.grade}`;
+        select.appendChild(option);
+      });
+    } catch (error) {
+      console.warn('Không thể tải danh sách lớp');
+    }
+  }
+
+  let lastReportData = null;
+
+  async function loadReport(classId, startDate, endDate) {
+    try {
+      const params = new URLSearchParams({ startDate, endDate });
+      const response = await fetch(`/api/v1/attendance/class/${classId}/report?${params}`, { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to load report');
+      const result = await response.json();
+      renderReport(result.data);
+      lastReportData = result.data;
+    } catch (error) {
+      console.warn('Không thể tải báo cáo');
+    }
+  }
+
+  function renderReport(data) {
+    const info = document.getElementById('classInfo');
+    const table = document.getElementById('reportTableContainer');
+    const list = document.getElementById('reportList');
+
+    info.classList.remove('hidden');
+    table.classList.remove('hidden');
+
+    document.getElementById('className').textContent = data.class.className;
+    document.getElementById('teacherName').textContent = data.class.homeroomTeacher?.fullName || 'Chưa có';
+
+    const totalStudents = data.report.length || 0;
+    const totalSessions = data.report[0]?.total || 0;
+    const avgRate =
+      totalStudents === 0
+        ? 0
+        : data.report.reduce((sum, student) => sum + parseFloat(student.attendanceRate || 0), 0) / totalStudents;
+
+    document.getElementById('totalStudents').textContent = totalStudents;
+    document.getElementById('avgAttendanceRate').textContent = `${avgRate.toFixed(1)}%`;
+    document.getElementById('totalSessions').textContent = totalSessions;
+    renderStatusBreakdown(data.report);
+
+    list.innerHTML = data.report
+      .map((item, index) => {
+        const rate = parseFloat(item.attendanceRate);
+        const rateClass = rate < 60 ? 'text-danger font-bold' : rate < 80 ? 'text-warning font-bold' : 'text-success font-bold';
+        return `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${item.student.studentCode}</td>
+            <td class="font-semibold">${item.student.fullName}</td>
+            <td>${item.total}</td>
+            <td>${item.present}</td>
+            <td>${item.absentWithPermission}</td>
+            <td>${item.absentWithoutPermission}</td>
+            <td>${item.late}</td>
+            <td class="${rateClass}">${item.attendanceRate}%</td>
+          </tr>
+        `;
+      })
+      .join('');
+  }
+
+  function renderStatusBreakdown(report = []) {
+    const container = document.getElementById('statusBreakdown');
+    if (!container) return;
+    if (!report.length) {
+      container.textContent = '';
+      return;
+    }
+    const totals = report.reduce(
+      (acc, item) => {
+        acc.present += item.present;
+        acc.absent += item.absentWithPermission + item.absentWithoutPermission;
+        acc.late += item.late;
+        return acc;
+      },
+      { present: 0, absent: 0, late: 0 }
+    );
+    container.innerHTML = `
+      <span> Có mặt: <strong>${totals.present}</strong></span> •
+      <span> Vắng: <strong>${totals.absent}</strong></span> •
+      <span> Đi muộn/Về sớm: <strong>${totals.late}</strong></span>
+    `;
+  }
+
+  function downloadReport() {
+    if (!lastReportData?.report?.length) {
+      alert('Chưa có dữ liệu để xuất');
+      return;
+    }
+    const headers = ['Mã HS', 'Họ tên', 'Tổng buổi', 'Có mặt', 'Vắng có phép', 'Vắng không phép', 'Đi muộn', 'Tỷ lệ (%)'];
+    const rows = lastReportData.report.map((item) => [
+      item.student.studentCode,
+      item.student.fullName,
+      item.total,
+      item.present,
+      item.absentWithPermission,
+      item.absentWithoutPermission,
+      item.late,
+      item.attendanceRate,
+    ]);
+    const csvContent = [headers.join(','), ...rows.map((row) => row.map((cell) => `"${cell}"`).join(','))].join('\n');
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `bao-cao-diem-danh-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+</script>
+
+<%- include('../partials/dashboard-layout-footer') %>

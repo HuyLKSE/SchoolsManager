@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title || 'Admin Dashboard' %> - QLHS</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    :root {
+      --page-bg: #f7f8fc;
+      --surface: #ffffff;
+      --border: #e5e7eb;
+      --text: #0f172a;
+      --muted: #475569;
+      --primary: #2563eb;
+      --primary-soft: #e3edff;
+      --danger: #dc2626;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: var(--page-bg);
+      color: var(--text);
+    }
+    .admin-container { display: flex; min-height: 100vh; }
+    .admin-sidebar {
+      width: 240px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+      padding-bottom: 24px;
+    }
+    .admin-sidebar-header { padding: 24px 20px; border-bottom: 1px solid var(--border); }
+    .admin-sidebar-header h1 { font-size: 22px; font-weight: 600; color: var(--primary); margin-bottom: 4px; }
+    .admin-sidebar-header .role-badge {
+      display: inline-block; padding: 4px 12px; background: var(--primary-soft);
+      border-radius: 999px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--primary);
+    }
+    .mode-switch { margin-top: 10px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+    .mode-chip {
+      display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border);
+      border-radius: 999px; padding: 4px 10px; background: #f8fafc; font-weight: 600;
+    }
+    .mode-action {
+      display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 10px;
+      text-decoration: none; font-weight: 600; background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0;
+    }
+    .mode-action:hover { background: #bbf7d0; }
+    .admin-menu { padding: 12px 0; }
+    .admin-menu-item {
+      display: flex; align-items: center; padding: 10px 20px; color: var(--muted);
+      text-decoration: none; border-left: 3px solid transparent;
+      transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    }
+    .admin-menu-item:hover { border-left-color: var(--primary); color: var(--primary); background: #f8faff; }
+    .admin-menu-item.active { border-left-color: var(--primary); background: var(--primary-soft); color: var(--text); font-weight: 600; }
+    .admin-menu-icon { width: 20px; height: 20px; margin-right: 12px; }
+    .admin-main { margin-left: 240px; flex: 1; padding: 24px 32px; }
+    .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    .admin-user-info { display: flex; align-items: center; gap: 12px; }
+    .admin-user-avatar {
+      width: 40px; height: 40px; border-radius: 50%; background: #e2e8f0;
+      display: flex; align-items: center; justify-content: center; color: var(--text); font-weight: 600;
+    }
+    .logout-btn {
+      padding: 8px 16px; background: var(--danger); color: white; border: none; border-radius: 6px;
+      cursor: pointer; font-size: 14px; transition: background 0.15s ease;
+    }
+    .logout-btn:hover { background: #b91c1c; }
+    .admin-content { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); padding: 24px; }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar-header">
+        <h1>dYZ" QLHS</h1>
+        <span class="role-badge">Quản trị</span>
+        <div class="mode-switch">
+          <span class="mode-chip">Chế độ quản lý</span>
+          <% if (user && (user.englishProfile?.enabled || user.role === 'admin' || user.role === 'teacher')) { %>
+            <a class="mode-action" href="/english/dashboard">Sang học</a>
+          <% } %>
+        </div>
+      </div>
+      
+      <nav class="admin-menu">
+        <a href="/admin/dashboard" class="admin-menu-item <%= (currentPage === 'dashboard' ? 'active' : '') %>">
+          <svg class="admin-menu-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+          Dashboard
+        </a>
+        
+        <a href="/admin/users" class="admin-menu-item <%= (currentPage === 'users' ? 'active' : '') %>">
+          <svg class="admin-menu-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          Quản lý Người dùng
+        </a>
+        
+        <a href="/students" class="admin-menu-item <%= (currentPage === 'students' ? 'active' : '') %>">
+          <svg class="admin-menu-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+          Học sinh
+        </a>
+        
+        <a href="/classes" class="admin-menu-item <%= (currentPage === 'classes' ? 'active' : '') %>">
+          <svg class="admin-menu-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+          Lớp học
+        </a>
+        
+        <a href="/scores" class="admin-menu-item <%= (currentPage === 'scores' ? 'active' : '') %>">
+          <svg class="admin-menu-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          Điểm số
+        </a>
+        
+        <a href="/attendance" class="admin-menu-item <%= (currentPage === 'attendance' ? 'active' : '') %>">
+          <svg class="admin-menu-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+          </svg>
+          Điểm danh
+        </a>
+        
+        <a href="/fees" class="admin-menu-item <%= (currentPage === 'fees' ? 'active' : '') %>">
+          <svg class="admin-menu-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Học phí
+        </a>
+        
+        <a href="/admin/school-settings" class="admin-menu-item <%= (currentPage === 'school-settings' ? 'active' : '') %>">
+          <svg class="admin-menu-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          Cài đặt Trường
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <!-- Header -->
+      <header class="admin-header">
+        <div>
+          <h2 style="font-size: 28px; font-weight: 700; color: #111827;"><%= title || 'Dashboard' %></h2>
+          <p style="color: #6b7280; margin-top: 4px;">Quản trị hệ thống</p>
+        </div>
+        
+        <div class="admin-user-info">
+          <div class="admin-user-avatar">
+            <%= user.fullName ? user.fullName.charAt(0).toUpperCase() : 'A' %>
+          </div>
+          <div>
+            <div style="font-weight: 600; color: #111827;"><%= user.fullName || 'Admin' %></div>
+            <div style="font-size: 13px; color: #6b7280;"><%= user.email %></div>
+          </div>
+          <% if (user && (user.englishProfile?.enabled || user.role === 'admin' || user.role === 'teacher')) { %>
+            <a href="/english/dashboard" class="mode-action" style="background:#eef2ff;border-color:#c7d2fe;color:#3730a3;">Sang học</a>
+          <% } %>
+          <button onclick="logout()" class="logout-btn">Đăng xuất</button>
+        </div>
+      </header>
+
+      <!-- Content Area -->
+      <div class="admin-content">
+        <%- body %>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    async function logout() {
+      if (confirm('Bạn có chắc muốn đăng xuất?')) {
+        try {
+          await fetch('/api/v1/auth/logout', { method: 'POST', credentials: 'include' });
+          window.location.href = '/login';
+        } catch (error) {
+          alert('Lỗi đăng xuất. Vui lòng thử lại.');
+        }
+      }
+    }
+  </script>
+</body>
+</html>

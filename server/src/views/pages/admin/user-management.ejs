@@ -1,0 +1,1095 @@
+<%- include('../../partials/dashboard-layout-header', { title: 'Quản lý Người dùng', user }) %>
+
+<!-- Page Header -->
+<div class="mb-8 flex items-center justify-between">
+  <div>
+    <h1 class="text-3xl font-bold text-gray-900">Quản Lý Người Dùng</h1>
+    <p class="mt-2 text-gray-600">Quản lý tài khoản và phân quyền</p>
+  </div>
+  <div class="flex gap-3">
+    <button onclick="loadPendingUsers()" class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition flex items-center">
+      <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      Chờ duyệt (<span id="pendingCount">0</span>)
+    </button>
+    <button onclick="openAddUserModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center">
+      <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      Thêm Người Dùng
+    </button>
+  </div>
+</div>
+
+<!-- Permissions Modal -->
+<div id="permissionsModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+  <div class="relative top-20 mx-auto p-6 border w-11/12 max-w-2xl shadow-lg rounded-lg bg-white">
+    <div class="flex justify-between items-center mb-6">
+      <div class="flex items-center gap-3">
+        <h3 class="text-xl font-bold text-gray-900">Phân Quyền Người Dùng</h3>
+        <span id="modalUserRoleBadge" class="px-3 py-1 text-sm font-semibold rounded-full"></span>
+      </div>
+      <button onclick="closePermissionsModal()" class="text-gray-400 hover:text-gray-600">
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    
+    <div class="mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center">
+          <div class="flex-shrink-0 h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
+            <span id="modalUserInitial" class="text-blue-600 font-bold text-lg"></span>
+          </div>
+          <div class="ml-4">
+            <div id="modalUserName" class="text-lg font-semibold text-gray-900"></div>
+            <div id="modalUserEmail" class="text-sm text-gray-500"></div>
+          </div>
+        </div>
+        <button onclick="viewAuditHistory()" 
+          class="px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition flex items-center gap-2">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Lịch Sử
+        </button>
+      </div>
+    </div>
+
+    <form id="permissionsForm" class="space-y-4">
+      <input type="hidden" id="editUserId" value="">
+      
+      <!-- Role Presets Quick Apply -->
+      <div class="mb-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+        <div class="flex items-center justify-between mb-2">
+          <label class="block text-sm font-medium text-gray-700">
+            ⚡ Áp dụng nhanh theo vai trò:
+          </label>
+          <span id="currentRoleIndicator" class="text-xs text-gray-500"></span>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <button type="button" onclick="applyRolePreset('admin')" data-role="admin"
+            class="role-preset-btn px-3 py-2 text-xs font-medium bg-white border-2 border-red-200 text-red-800 rounded-lg hover:bg-red-50 hover:border-red-400 transition">
+            🔑 Admin
+          </button>
+          <button type="button" onclick="applyRolePreset('teacher')" data-role="teacher"
+            class="role-preset-btn px-3 py-2 text-xs font-medium bg-white border-2 border-blue-200 text-blue-800 rounded-lg hover:bg-blue-50 hover:border-blue-400 transition">
+            👨‍🏫 Giáo Viên
+          </button>
+          <button type="button" onclick="applyRolePreset('staff')" data-role="staff"
+            class="role-preset-btn px-3 py-2 text-xs font-medium bg-white border-2 border-yellow-200 text-yellow-800 rounded-lg hover:bg-yellow-50 hover:border-yellow-400 transition">
+            👔 Nhân Viên
+          </button>
+          <button type="button" onclick="applyRolePreset('student')" data-role="student"
+            class="role-preset-btn px-3 py-2 text-xs font-medium bg-white border-2 border-green-200 text-green-800 rounded-lg hover:bg-green-50 hover:border-green-400 transition">
+            🎓 Học Sinh
+          </button>
+          <button type="button" onclick="applyRolePreset('parent')" data-role="parent"
+            class="role-preset-btn px-3 py-2 text-xs font-medium bg-white border-2 border-purple-200 text-purple-800 rounded-lg hover:bg-purple-50 hover:border-purple-400 transition">
+            👨‍👩‍👧 Phụ Huynh
+          </button>
+          <button type="button" onclick="applyRolePreset('user')" data-role="user"
+            class="role-preset-btn px-3 py-2 text-xs font-medium bg-white border-2 border-gray-200 text-gray-800 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition">
+            👤 User
+          </button>
+        </div>
+        <p class="text-xs text-gray-500 mt-2 flex items-center gap-1">
+          <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+          Click để tự động điền quyền. Nút có viền đậm là role hiện tại.
+        </p>
+      </div>
+      
+      <div class="space-y-3">
+        <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+          <input type="checkbox" name="canCreate" id="canCreate" class="h-5 w-5 text-blue-600 rounded">
+          <div class="ml-3">
+            <span class="font-medium text-gray-900">Quyền Tạo (Create)</span>
+            <p class="text-sm text-gray-500">Cho phép tạo mới dữ liệu</p>
+          </div>
+        </label>
+
+        <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+          <input type="checkbox" name="canUpdate" id="canUpdate" class="h-5 w-5 text-blue-600 rounded">
+          <div class="ml-3">
+            <span class="font-medium text-gray-900">Quyền Sửa (Update)</span>
+            <p class="text-sm text-gray-500">Cho phép chỉnh sửa dữ liệu</p>
+          </div>
+        </label>
+
+        <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+          <input type="checkbox" name="canDelete" id="canDelete" class="h-5 w-5 text-blue-600 rounded">
+          <div class="ml-3">
+            <span class="font-medium text-gray-900">Quyền Xóa (Delete)</span>
+            <p class="text-sm text-gray-500">Cho phép xóa dữ liệu</p>
+          </div>
+        </label>
+
+        <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+          <input type="checkbox" name="canViewAll" id="canViewAll" class="h-5 w-5 text-blue-600 rounded">
+          <div class="ml-3">
+            <span class="font-medium text-gray-900">Quyền Xem Tất Cả (View All)</span>
+            <p class="text-sm text-gray-500">Cho phép xem toàn bộ dữ liệu</p>
+          </div>
+        </label>
+
+        <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+          <input type="checkbox" name="canManageUsers" id="canManageUsers" class="h-5 w-5 text-blue-600 rounded">
+          <div class="ml-3">
+            <span class="font-medium text-gray-900">Quyền Quản Lý Users</span>
+            <p class="text-sm text-gray-500">Cho phép quản lý tài khoản người dùng</p>
+          </div>
+        </label>
+
+        <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+          <input type="checkbox" name="canManageSchool" id="canManageSchool" class="h-5 w-5 text-blue-600 rounded">
+          <div class="ml-3">
+            <span class="font-medium text-gray-900">Quyền Quản Lý Trường</span>
+            <p class="text-sm text-gray-500">Cho phép chỉnh sửa cài đặt trường</p>
+          </div>
+        </label>
+      </div>
+
+      <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
+        <button type="button" onclick="closePermissionsModal()" 
+          class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
+          Hủy
+        </button>
+        <button type="submit" 
+          class="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition shadow-lg">
+          💾 Lưu Phân Quyền
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Audit History Modal -->
+<div id="auditHistoryModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+  <div class="relative top-10 mx-auto p-6 border w-11/12 max-w-4xl shadow-lg rounded-lg bg-white">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-xl font-bold text-gray-900">📜 Lịch Sử Phân Quyền</h3>
+      <button onclick="closeAuditHistoryModal()" class="text-gray-400 hover:text-gray-600">
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    
+    <div class="mb-4 flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
+      <svg class="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+      </svg>
+      <div class="text-sm">
+        <span class="font-medium text-gray-900">Người dùng:</span>
+        <span id="auditUserName" class="text-gray-700"></span>
+        <span class="text-gray-400 mx-2">|</span>
+        <span id="auditUserEmail" class="text-gray-600"></span>
+      </div>
+    </div>
+    
+    <div id="auditHistoryContent" class="max-h-96 overflow-y-auto">
+      <div class="flex items-center justify-center py-12">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Permissions Modal -->
+<div id="bulkPermissionsModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+  <div class="relative top-20 mx-auto p-6 border w-11/12 max-w-2xl shadow-lg rounded-lg bg-white">
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <h3 class="text-xl font-bold text-gray-900">⚡ Áp Dụng Quyền Hàng Loạt</h3>
+        <p class="text-sm text-gray-500 mt-1">Áp dụng permissions cho <span id="bulkSelectedCount" class="font-semibold text-blue-600">0</span> người dùng đã chọn</p>
+      </div>
+      <button onclick="closeBulkPermissionsModal()" class="text-gray-400 hover:text-gray-600">
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    
+    <form id="bulkPermissionsForm" class="space-y-4">
+      <!-- Role Presets Quick Apply -->
+      <div class="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          ⚡ Chọn role preset:
+        </label>
+        <div class="grid grid-cols-3 gap-2">
+          <button type="button" onclick="applyBulkRolePreset('admin')" data-role="admin"
+            class="bulk-role-btn px-3 py-2 text-xs font-medium bg-white border-2 border-red-200 text-red-800 rounded-lg hover:bg-red-50 hover:border-red-400 transition">
+            🔑 Admin
+          </button>
+          <button type="button" onclick="applyBulkRolePreset('teacher')" data-role="teacher"
+            class="bulk-role-btn px-3 py-2 text-xs font-medium bg-white border-2 border-blue-200 text-blue-800 rounded-lg hover:bg-blue-50 hover:border-blue-400 transition">
+            👨‍🏫 Giáo Viên
+          </button>
+          <button type="button" onclick="applyBulkRolePreset('staff')" data-role="staff"
+            class="bulk-role-btn px-3 py-2 text-xs font-medium bg-white border-2 border-yellow-200 text-yellow-800 rounded-lg hover:bg-yellow-50 hover:border-yellow-400 transition">
+            👔 Nhân Viên
+          </button>
+          <button type="button" onclick="applyBulkRolePreset('student')" data-role="student"
+            class="bulk-role-btn px-3 py-2 text-xs font-medium bg-white border-2 border-green-200 text-green-800 rounded-lg hover:bg-green-50 hover:border-green-400 transition">
+            🎓 Học Sinh
+          </button>
+          <button type="button" onclick="applyBulkRolePreset('parent')" data-role="parent"
+            class="bulk-role-btn px-3 py-2 text-xs font-medium bg-white border-2 border-purple-200 text-purple-800 rounded-lg hover:bg-purple-50 hover:border-purple-400 transition">
+            👨‍👩‍👧 Phụ Huynh
+          </button>
+          <button type="button" onclick="applyBulkRolePreset('user')" data-role="user"
+            class="bulk-role-btn px-3 py-2 text-xs font-medium bg-white border-2 border-gray-200 text-gray-800 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition">
+            👤 User
+          </button>
+        </div>
+      </div>
+      
+      <div class="space-y-3">
+        <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+          <input type="checkbox" name="canCreate" id="bulkCanCreate" class="h-5 w-5 text-blue-600 rounded">
+          <div class="ml-3">
+            <span class="font-medium text-gray-900">Quyền Tạo (Create)</span>
+            <p class="text-sm text-gray-500">Cho phép tạo mới dữ liệu</p>
+          </div>
+        </label>
+
+        <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+          <input type="checkbox" name="canUpdate" id="bulkCanUpdate" class="h-5 w-5 text-blue-600 rounded">
+          <div class="ml-3">
+            <span class="font-medium text-gray-900">Quyền Sửa (Update)</span>
+            <p class="text-sm text-gray-500">Cho phép chỉnh sửa dữ liệu</p>
+          </div>
+        </label>
+
+        <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+          <input type="checkbox" name="canDelete" id="bulkCanDelete" class="h-5 w-5 text-blue-600 rounded">
+          <div class="ml-3">
+            <span class="font-medium text-gray-900">Quyền Xóa (Delete)</span>
+            <p class="text-sm text-gray-500">Cho phép xóa dữ liệu</p>
+          </div>
+        </label>
+
+        <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+          <input type="checkbox" name="canViewAll" id="bulkCanViewAll" class="h-5 w-5 text-blue-600 rounded">
+          <div class="ml-3">
+            <span class="font-medium text-gray-900">Quyền Xem Tất Cả (View All)</span>
+            <p class="text-sm text-gray-500">Cho phép xem toàn bộ dữ liệu</p>
+          </div>
+        </label>
+
+        <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+          <input type="checkbox" name="canManageUsers" id="bulkCanManageUsers" class="h-5 w-5 text-blue-600 rounded">
+          <div class="ml-3">
+            <span class="font-medium text-gray-900">Quyền Quản Lý Users</span>
+            <p class="text-sm text-gray-500">Cho phép quản lý tài khoản người dùng</p>
+          </div>
+        </label>
+
+        <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+          <input type="checkbox" name="canManageSchool" id="bulkCanManageSchool" class="h-5 w-5 text-blue-600 rounded">
+          <div class="ml-3">
+            <span class="font-medium text-gray-900">Quyền Quản Lý Trường</span>
+            <p class="text-sm text-gray-500">Cho phép chỉnh sửa cài đặt trường</p>
+          </div>
+        </label>
+      </div>
+
+      <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
+        <button type="button" onclick="closeBulkPermissionsModal()" 
+          class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
+          Hủy
+        </button>
+        <button type="submit" 
+          class="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition shadow-lg">
+          💾 Áp Dụng Hàng Loạt
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Pending Users Modal -->
+<div id="pendingUsersModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+  <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-bold text-gray-900">Tài Khoản Chờ Duyệt</h3>
+      <button onclick="closePendingModal()" class="text-gray-400 hover:text-gray-600">
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div id="pendingUsersContent" class="overflow-x-auto">
+      <!-- Pending users will be loaded here -->
+    </div>
+  </div>
+</div>
+
+<!-- Search & Filter -->
+<div class="bg-white rounded-lg shadow p-6 mb-6">
+  <form method="GET" action="/api/v1/admin/users" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <input 
+      type="text" 
+      name="search" 
+      placeholder="Tìm theo tên hoặc email..." 
+      value="<%= typeof search !== 'undefined' ? search : '' %>"
+      class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+    >
+    <select name="role" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+      <option value="">-- Tất cả vai trò --</option>
+      <option value="admin">Admin</option>
+      <option value="teacher">Giáo viên</option>
+      <option value="staff">Nhân viên</option>
+    </select>
+    <button type="submit" class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition">
+      Tìm kiếm
+    </button>
+  </form>
+</div>
+
+<!-- Bulk Actions Bar (Hidden by default) -->
+<div id="bulkActionsBar" class="hidden bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg shadow-lg p-4 mb-6 sticky top-4 z-10">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span class="font-semibold"><span id="selectedCount">0</span> người dùng được chọn</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="openBulkPermissionsModal()" class="px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition font-medium text-sm">
+        ⚡ Áp Dụng Quyền Hàng Loạt
+      </button>
+      <button onclick="clearSelection()" class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition font-medium text-sm">
+        Bỏ Chọn
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Users Table -->
+<div class="bg-white rounded-lg shadow overflow-hidden">
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-6 py-3 text-left">
+          <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" 
+            class="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+        </th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Họ Tên</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vai Trò</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quyền</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng Thái</th>
+        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Hành Động</th>
+      </tr>
+    </thead>
+    <tbody class="bg-white divide-y divide-gray-200">
+      <% users.forEach(u => { %>
+        <tr class="hover:bg-gray-50 user-row" data-user-id="<%= u._id %>">
+          <td class="px-6 py-4 whitespace-nowrap">
+            <input type="checkbox" class="user-checkbox h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500" 
+              data-user-id="<%= u._id %>" onchange="updateSelection()">
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <span class="text-blue-600 font-semibold"><%= u.fullName.charAt(0).toUpperCase() %></span>
+              </div>
+              <div class="ml-4">
+                <div class="text-sm font-medium text-gray-900"><%= u.fullName %></div>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= u.email %></td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+              <%= u.isAdmin() ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800' %>">
+              <%= u.isAdmin() ? 'Admin' : 'User' %>
+            </span>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <div class="flex flex-wrap gap-1">
+              <% if (u.permissions.canCreate) { %><span class="px-1 text-xs bg-green-100 text-green-800 rounded">Tạo</span><% } %>
+              <% if (u.permissions.canUpdate) { %><span class="px-1 text-xs bg-yellow-100 text-yellow-800 rounded">Sửa</span><% } %>
+              <% if (u.permissions.canDelete) { %><span class="px-1 text-xs bg-red-100 text-red-800 rounded">Xóa</span><% } %>
+              <% if (u.permissions.canViewAll) { %><span class="px-1 text-xs bg-blue-100 text-blue-800 rounded">Xem</span><% } %>
+            </div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+              <%= u.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' %>">
+              <%= u.isActive ? 'Hoạt động' : 'Tạm khóa' %>
+            </span>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+            <button onclick="editPermissions('<%= u._id %>')" class="text-blue-600 hover:text-blue-900 mr-3">Phân quyền</button>
+            <% if (!u._id.equals(user._id)) { %>
+              <button onclick="deleteUser('<%= u._id %>')" class="text-red-600 hover:text-red-900">Xóa</button>
+            <% } %>
+          </td>
+        </tr>
+      <% }); %>
+      <% if (users.length === 0) { %>
+        <tr>
+          <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+            Không tìm thấy người dùng nào
+          </td>
+        </tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+
+<!-- Pagination -->
+<% if (pagination.totalPages > 1) { %>
+  <div class="mt-6 flex items-center justify-between">
+    <div class="text-sm text-gray-700">
+      Hiển thị <span class="font-medium"><%= (pagination.page - 1) * pagination.limit + 1 %></span> 
+      đến <span class="font-medium"><%= Math.min(pagination.page * pagination.limit, pagination.total) %></span> 
+      trong tổng số <span class="font-medium"><%= pagination.total %></span> người dùng
+    </div>
+    <div class="flex space-x-2">
+      <% if (pagination.page > 1) { %>
+        <a href="?page=<%= pagination.page - 1 %>" class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+          Trước
+        </a>
+      <% } %>
+      <% for (let i = 1; i <= pagination.totalPages; i++) { %>
+        <a href="?page=<%= i %>" class="px-3 py-2 border rounded-lg 
+          <%= i === pagination.page ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-300 hover:bg-gray-50' %>">
+          <%= i %>
+        </a>
+      <% } %>
+      <% if (pagination.page < pagination.totalPages) { %>
+        <a href="?page=<%= pagination.page + 1 %>" class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+          Sau
+        </a>
+      <% } %>
+    </div>
+  </div>
+<% } %>
+
+<script>
+// Global state
+let currentEditingUser = null;
+
+// Permissions Modal Functions
+async function editPermissions(userId) {
+  try {
+    // Fetch user details
+    const res = await fetch(`/api/v1/admin/users/${userId}`, {
+      credentials: 'include'
+    });
+    
+    if (!res.ok) throw new Error('Failed to load user');
+    
+    const result = await res.json();
+    const user = result.data;
+    
+    // Store current user globally
+    currentEditingUser = user;
+    
+    // Fill modal with user info
+    document.getElementById('modalUserInitial').textContent = user.fullName.charAt(0).toUpperCase();
+    document.getElementById('modalUserName').textContent = user.fullName;
+    document.getElementById('modalUserEmail').textContent = user.email;
+    document.getElementById('editUserId').value = userId;
+    
+    // Display role badge
+    const roleBadge = document.getElementById('modalUserRoleBadge');
+    const roleColors = {
+      admin: 'bg-red-100 text-red-800 border border-red-300',
+      teacher: 'bg-blue-100 text-blue-800 border border-blue-300',
+      staff: 'bg-yellow-100 text-yellow-800 border border-yellow-300',
+      student: 'bg-green-100 text-green-800 border border-green-300',
+      parent: 'bg-purple-100 text-purple-800 border border-purple-300',
+      user: 'bg-gray-100 text-gray-800 border border-gray-300'
+    };
+    roleBadge.className = `px-3 py-1 text-sm font-semibold rounded-full ${roleColors[user.role] || roleColors.user}`;
+    roleBadge.textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+    
+    // Highlight active role preset button
+    document.querySelectorAll('.role-preset-btn').forEach(btn => {
+      btn.classList.remove('ring-4', 'ring-offset-2', 'ring-blue-500');
+      if (btn.getAttribute('data-role') === user.role) {
+        btn.classList.add('ring-4', 'ring-offset-2', 'ring-blue-500');
+      }
+    });
+    
+    // Update role indicator
+    document.getElementById('currentRoleIndicator').textContent = `Role hiện tại: ${user.role}`;
+    
+    // Set checkboxes based on current permissions
+    document.getElementById('canCreate').checked = user.permissions.canCreate || false;
+    document.getElementById('canUpdate').checked = user.permissions.canUpdate || false;
+    document.getElementById('canDelete').checked = user.permissions.canDelete || false;
+    document.getElementById('canViewAll').checked = user.permissions.canViewAll || false;
+    document.getElementById('canManageUsers').checked = user.permissions.canManageUsers || false;
+    document.getElementById('canManageSchool').checked = user.permissions.canManageSchool || false;
+    
+    // Show modal
+    document.getElementById('permissionsModal').classList.remove('hidden');
+  } catch (error) {
+    console.error('Load user error:', error);
+    window.showToast('Lỗi tải thông tin người dùng', 'error');
+  }
+}
+
+function closePermissionsModal() {
+  document.getElementById('permissionsModal').classList.add('hidden');
+  currentEditingUser = null;
+}
+
+// Role Presets - Quick Apply
+const rolePresetsConfig = {
+  admin: { canCreate: true, canUpdate: true, canDelete: true, canViewAll: true, canManageUsers: true, canManageSchool: true },
+  teacher: { canCreate: true, canUpdate: true, canDelete: false, canViewAll: true, canManageUsers: false, canManageSchool: false },
+  staff: { canCreate: true, canUpdate: true, canDelete: false, canViewAll: true, canManageUsers: false, canManageSchool: false },
+  student: { canCreate: false, canUpdate: false, canDelete: false, canViewAll: false, canManageUsers: false, canManageSchool: false },
+  parent: { canCreate: false, canUpdate: false, canDelete: false, canViewAll: false, canManageUsers: false, canManageSchool: false },
+  user: { canCreate: false, canUpdate: false, canDelete: false, canViewAll: false, canManageUsers: false, canManageSchool: false }
+};
+
+function applyRolePreset(role) {
+  const preset = rolePresetsConfig[role];
+  if (!preset) {
+    window.showToast('Role không hợp lệ', 'error');
+    return;
+  }
+  
+  // Update ring highlight
+  document.querySelectorAll('.role-preset-btn').forEach(btn => {
+    btn.classList.remove('ring-4', 'ring-offset-2', 'ring-green-500');
+  });
+  event.target.classList.add('ring-4', 'ring-offset-2', 'ring-green-500');
+  
+  // Apply preset to checkboxes with animation
+  const checkboxes = ['canCreate', 'canUpdate', 'canDelete', 'canViewAll', 'canManageUsers', 'canManageSchool'];
+  checkboxes.forEach((id, index) => {
+    setTimeout(() => {
+      const checkbox = document.getElementById(id);
+      checkbox.checked = preset[id];
+      checkbox.parentElement.classList.add('bg-green-50');
+      setTimeout(() => checkbox.parentElement.classList.remove('bg-green-50'), 300);
+    }, index * 50);
+  });
+  
+  window.showToast(`✅ Đã áp dụng quyền ${role}`, 'success');
+}
+
+// Audit History Functions
+async function viewAuditHistory() {
+  if (!currentEditingUser) {
+    window.showToast('Không tìm thấy thông tin người dùng', 'error');
+    return;
+  }
+  
+  // Update modal header
+  document.getElementById('auditUserName').textContent = currentEditingUser.fullName;
+  document.getElementById('auditUserEmail').textContent = currentEditingUser.email;
+  
+  // Show modal with loading
+  document.getElementById('auditHistoryModal').classList.remove('hidden');
+  document.getElementById('auditHistoryContent').innerHTML = `
+    <div class="flex items-center justify-center py-12">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    </div>
+  `;
+  
+  try {
+    const res = await fetch(`/api/v1/admin/users/${currentEditingUser._id}/audit-logs?limit=20`, {
+      credentials: 'include'
+    });
+    
+    if (!res.ok) throw new Error('Failed to load audit logs');
+    
+    const result = await res.json();
+    const logs = result.data?.logs || [];
+    
+    if (logs.length === 0) {
+      document.getElementById('auditHistoryContent').innerHTML = `
+        <div class="text-center py-12">
+          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <p class="mt-4 text-gray-500">Chưa có lịch sử thay đổi nào</p>
+        </div>
+      `;
+      return;
+    }
+    
+    // Render timeline
+    const timelineHTML = logs.map(log => renderAuditLogItem(log)).join('');
+    document.getElementById('auditHistoryContent').innerHTML = `
+      <div class="relative border-l-2 border-gray-200 ml-3">
+        ${timelineHTML}
+      </div>
+    `;
+    
+  } catch (error) {
+    console.error('Load audit history error:', error);
+    document.getElementById('auditHistoryContent').innerHTML = `
+      <div class="text-center py-12 text-red-600">
+        <svg class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p class="mt-4">Lỗi tải lịch sử: ${error.message}</p>
+      </div>
+    `;
+  }
+}
+
+function renderAuditLogItem(log) {
+  const date = new Date(log.createdAt);
+  const formattedDate = date.toLocaleString('vi-VN');
+  
+  const actionIcons = {
+    PERMISSION_UPDATE: '🔧',
+    ROLE_APPLY: '⚡',
+    PERMISSION_BULK_UPDATE: '📦',
+    USER_APPROVE: '✅',
+    USER_REJECT: '❌',
+    USER_DELETE: '🗑️'
+  };
+  
+  const actionLabels = {
+    PERMISSION_UPDATE: 'Cập nhật quyền',
+    ROLE_APPLY: 'Áp dụng role preset',
+    PERMISSION_BULK_UPDATE: 'Bulk update',
+    USER_APPROVE: 'Phê duyệt',
+    USER_REJECT: 'Từ chối',
+    USER_DELETE: 'Xóa user'
+  };
+  
+  const icon = actionIcons[log.action] || '📝';
+  const label = actionLabels[log.action] || log.action;
+  
+  // Generate diff for permissions
+  let diffHTML = '';
+  if (log.oldData?.permissions && log.newData?.permissions) {
+    diffHTML = renderPermissionsDiff(log.oldData.permissions, log.newData.permissions);
+  } else if (log.action === 'ROLE_APPLY') {
+    diffHTML = `<div class="text-sm text-gray-700 mt-2">
+      <span class="font-medium">Role:</span> ${log.oldData?.role} → ${log.newData?.role}
+      <br><span class="text-xs text-gray-500">Preset: ${log.metadata?.rolePresetApplied || 'N/A'}</span>
+    </div>`;
+  }
+  
+  return `
+    <div class="mb-6 ml-6 relative">
+      <span class="absolute -left-9 flex items-center justify-center w-6 h-6 bg-blue-100 rounded-full ring-4 ring-white">
+        ${icon}
+      </span>
+      <div class="bg-white p-4 rounded-lg shadow border border-gray-200 hover:shadow-md transition">
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="text-sm font-semibold text-gray-900">${label}</h4>
+          <time class="text-xs text-gray-500">${formattedDate}</time>
+        </div>
+        <p class="text-sm text-gray-600 mb-2">
+          Bởi: <span class="font-medium">${log.userId?.fullName || 'Unknown'}</span>
+          <span class="text-gray-400">(${log.userId?.email || 'N/A'})</span>
+        </p>
+        ${diffHTML}
+      </div>
+    </div>
+  `;
+}
+
+function renderPermissionsDiff(oldPerms, newPerms) {
+  const permLabels = {
+    canCreate: '🔨 Tạo',
+    canUpdate: '✏️ Sửa',
+    canDelete: '🗑️ Xóa',
+    canViewAll: '👁️ Xem tất cả',
+    canManageUsers: '👥 Quản lý Users',
+    canManageSchool: '🏫 Quản lý Trường'
+  };
+  
+  let changesHTML = '<div class="mt-2 space-y-1">';
+  let hasChanges = false;
+  
+  Object.keys(permLabels).forEach(key => {
+    if (oldPerms[key] !== newPerms[key]) {
+      hasChanges = true;
+      const oldVal = oldPerms[key] ? '✅' : '❌';
+      const newVal = newPerms[key] ? '✅' : '❌';
+      const color = newPerms[key] ? 'text-green-700' : 'text-red-700';
+      changesHTML += `
+        <div class="text-xs ${color} flex items-center gap-2">
+          <span class="font-medium">${permLabels[key]}:</span>
+          <span class="line-through text-gray-400">${oldVal}</span>
+          <span>→</span>
+          <span class="font-semibold">${newVal}</span>
+        </div>
+      `;
+    }
+  });
+  
+  changesHTML += '</div>';
+  
+  return hasChanges ? changesHTML : '<div class="text-xs text-gray-500 mt-2">Không có thay đổi</div>';
+}
+
+function closeAuditHistoryModal() {
+  document.getElementById('auditHistoryModal').classList.add('hidden');
+}
+
+// Handle permissions form submission
+document.getElementById('permissionsForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const userId = document.getElementById('editUserId').value;
+  const formData = {
+    canCreate: document.getElementById('canCreate').checked ? 'true' : 'false',
+    canUpdate: document.getElementById('canUpdate').checked ? 'true' : 'false',
+    canDelete: document.getElementById('canDelete').checked ? 'true' : 'false',
+    canViewAll: document.getElementById('canViewAll').checked ? 'true' : 'false',
+    canManageUsers: document.getElementById('canManageUsers').checked ? 'true' : 'false',
+    canManageSchool: document.getElementById('canManageSchool').checked ? 'true' : 'false'
+  };
+  
+  // Validation: Warn if removing critical permissions
+  if (currentEditingUser && currentEditingUser._id === '<%= user._id %>') {
+    if (formData.canManageUsers === 'false') {
+      if (!confirm('⚠️ CẢNH BÁO: Bạn đang xóa quyền "Quản lý Users" của chính mình!\n\nBạn sẽ không thể truy cập trang này nữa. Tiếp tục?')) {
+        return;
+      }
+    }
+  }
+  
+  // Show loading state
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  const originalText = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<svg class="animate-spin h-5 w-5 mx-auto" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+  
+  try {
+    const res = await fetch(`/api/v1/admin/users/${userId}/permissions`, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData)
+    });
+    
+    const data = await res.json();
+    
+    if (res.ok) {
+      window.showToast('✅ Cập nhật quyền thành công! Đang tải lại...', 'success');
+      closePermissionsModal();
+      setTimeout(() => location.reload(), 1200);
+    } else {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
+      window.showToast(data.error?.message || 'Lỗi cập nhật quyền', 'error');
+    }
+  } catch (error) {
+    console.error('Update permissions error:', error);
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalText;
+    window.showToast('❌ Lỗi kết nối máy chủ', 'error');
+  }
+});
+
+async function deleteUser(userId) {
+  if (!confirm('Bạn có chắc muốn xóa người dùng này?')) return;
+  
+  try {
+    const response = await fetch(`/api/v1/admin/users/${userId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    if (response.ok) {
+      window.showToast('Xóa người dùng thành công', 'success');
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      const data = await response.json();
+      window.showToast(data.error?.message || 'Lỗi xóa người dùng', 'error');
+    }
+  } catch (error) {
+    window.showToast('Lỗi kết nối máy chủ', 'error');
+  }
+}
+
+function openAddUserModal() {
+  alert('Chức năng thêm người dùng sẽ được triển khai tiếp theo');
+}
+
+// ==================== BULK OPERATIONS ====================
+let selectedUserIds = new Set();
+
+function toggleSelectAll() {
+  const selectAll = document.getElementById('selectAll');
+  const checkboxes = document.querySelectorAll('.user-checkbox');
+  
+  checkboxes.forEach(cb => {
+    cb.checked = selectAll.checked;
+    if (selectAll.checked) {
+      selectedUserIds.add(cb.dataset.userId);
+    } else {
+      selectedUserIds.delete(cb.dataset.userId);
+    }
+  });
+  
+  updateBulkActionsBar();
+}
+
+function updateSelection() {
+  const checkboxes = document.querySelectorAll('.user-checkbox');
+  const selectAll = document.getElementById('selectAll');
+  
+  // Rebuild selectedUserIds from checked checkboxes
+  selectedUserIds.clear();
+  checkboxes.forEach(cb => {
+    if (cb.checked) {
+      selectedUserIds.add(cb.dataset.userId);
+    }
+  });
+  
+  // Update "select all" checkbox state
+  const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+  const someChecked = Array.from(checkboxes).some(cb => cb.checked);
+  selectAll.checked = allChecked;
+  selectAll.indeterminate = someChecked && !allChecked;
+  
+  updateBulkActionsBar();
+}
+
+function updateBulkActionsBar() {
+  const bulkBar = document.getElementById('bulkActionsBar');
+  const count = selectedUserIds.size;
+  
+  if (count > 0) {
+    bulkBar.classList.remove('hidden');
+    document.getElementById('selectedCount').textContent = count;
+  } else {
+    bulkBar.classList.add('hidden');
+  }
+}
+
+function clearSelection() {
+  selectedUserIds.clear();
+  document.querySelectorAll('.user-checkbox').forEach(cb => cb.checked = false);
+  document.getElementById('selectAll').checked = false;
+  updateBulkActionsBar();
+}
+
+function openBulkPermissionsModal() {
+  if (selectedUserIds.size === 0) {
+    window.showToast('Vui lòng chọn ít nhất 1 người dùng', 'error');
+    return;
+  }
+  
+  document.getElementById('bulkSelectedCount').textContent = selectedUserIds.size;
+  document.getElementById('bulkPermissionsModal').classList.remove('hidden');
+}
+
+function closeBulkPermissionsModal() {
+  document.getElementById('bulkPermissionsModal').classList.add('hidden');
+}
+
+function applyBulkRolePreset(role) {
+  const preset = rolePresetsConfig[role];
+  if (!preset) {
+    window.showToast('Role không hợp lệ', 'error');
+    return;
+  }
+  
+  // Update ring highlight
+  document.querySelectorAll('.bulk-role-btn').forEach(btn => {
+    btn.classList.remove('ring-4', 'ring-offset-2', 'ring-green-500');
+  });
+  event.target.classList.add('ring-4', 'ring-offset-2', 'ring-green-500');
+  
+  // Apply preset to checkboxes with animation
+  const checkboxes = ['bulkCanCreate', 'bulkCanUpdate', 'bulkCanDelete', 'bulkCanViewAll', 'bulkCanManageUsers', 'bulkCanManageSchool'];
+  checkboxes.forEach((id, index) => {
+    setTimeout(() => {
+      const checkbox = document.getElementById(id);
+      const permKey = id.replace('bulk', '').replace(/^./, str => str.toLowerCase());
+      checkbox.checked = preset[permKey];
+      checkbox.parentElement.classList.add('bg-green-50');
+      setTimeout(() => checkbox.parentElement.classList.remove('bg-green-50'), 300);
+    }, index * 50);
+  });
+  
+  window.showToast(`✅ Đã áp dụng preset ${role}`, 'success');
+}
+
+// Handle bulk permissions form submission
+document.getElementById('bulkPermissionsForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  if (selectedUserIds.size === 0) {
+    window.showToast('Không có người dùng nào được chọn', 'error');
+    return;
+  }
+  
+  const formData = {
+    userIds: Array.from(selectedUserIds),
+    permissions: {
+      canCreate: document.getElementById('bulkCanCreate').checked,
+      canUpdate: document.getElementById('bulkCanUpdate').checked,
+      canDelete: document.getElementById('bulkCanDelete').checked,
+      canViewAll: document.getElementById('bulkCanViewAll').checked,
+      canManageUsers: document.getElementById('bulkCanManageUsers').checked,
+      canManageSchool: document.getElementById('bulkCanManageSchool').checked
+    }
+  };
+  
+  if (!confirm(`⚠️ Bạn có chắc muốn áp dụng quyền này cho ${selectedUserIds.size} người dùng?\n\nHành động này không thể hoàn tác.`)) {
+    return;
+  }
+  
+  // Show loading state
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  const originalText = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<svg class="animate-spin h-5 w-5 mx-auto" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+  
+  try {
+    const res = await fetch('/api/v1/admin/users/bulk-permissions', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData)
+    });
+    
+    const data = await res.json();
+    
+    if (res.ok) {
+      window.showToast(`✅ Đã cập nhật quyền cho ${data.data.modifiedCount} người dùng!`, 'success');
+      closeBulkPermissionsModal();
+      clearSelection();
+      setTimeout(() => location.reload(), 1200);
+    } else {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
+      window.showToast(data.error?.message || 'Lỗi bulk update', 'error');
+    }
+  } catch (error) {
+    console.error('Bulk permissions error:', error);
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalText;
+    window.showToast('❌ Lỗi kết nối máy chủ', 'error');
+  }
+});
+
+async function loadPendingUsers() {
+  try {
+    const res = await fetch('/api/v1/admin/users/pending', {
+      credentials: 'include'
+    });
+    
+    if (!res.ok) {
+      throw new Error('Failed to load pending users');
+    }
+    
+    const result = await res.json();
+    const users = result.data || [];
+    
+    document.getElementById('pendingCount').textContent = users.length;
+    
+    if (users.length === 0) {
+      document.getElementById('pendingUsersContent').innerHTML = 
+        '<div class="text-center py-8 text-gray-500">Không có tài khoản nào chờ duyệt</div>';
+    } else {
+      document.getElementById('pendingUsersContent').innerHTML = 
+        '<table class="min-w-full divide-y divide-gray-200">' +
+          '<thead class="bg-gray-50">' +
+            '<tr>' +
+              '<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Họ tên</th>' +
+              '<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>' +
+              '<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Vai trò yêu cầu</th>' +
+              '<th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Hành động</th>' +
+            '</tr>' +
+          '</thead>' +
+          '<tbody class="bg-white divide-y divide-gray-200">' +
+            users.map(u => 
+              '<tr class="hover:bg-gray-50">' +
+                '<td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">' + u.fullName + '</td>' +
+                '<td class="px-6 py-4 whitespace-nowrap text-gray-600">' + u.email + '</td>' +
+                '<td class="px-6 py-4 whitespace-nowrap"><span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">' + u.role + '</span></td>' +
+                '<td class="px-6 py-4 whitespace-nowrap text-center">' +
+                  '<button onclick="approveUser(\'' + u._id + '\')" class="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600 mr-2">Duyệt</button>' +
+                  '<button onclick="rejectUser(\'' + u._id + '\')" class="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600">Từ chối</button>' +
+                '</td>' +
+              '</tr>'
+            ).join('') +
+          '</tbody>' +
+        '</table>';
+    }
+    
+    document.getElementById('pendingUsersModal').classList.remove('hidden');
+  } catch (error) {
+    console.error('Load pending users error:', error);
+    alert('Lỗi tải danh sách chờ duyệt');
+  }
+}
+
+function closePendingModal() {
+  document.getElementById('pendingUsersModal').classList.add('hidden');
+}
+
+async function approveUser(userId) {
+  try {
+    const res = await fetch('/api/v1/admin/users/' + userId + '/approve', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    if (res.ok) {
+      alert('Duyệt tài khoản thành công');
+      loadPendingUsers();
+    } else {
+      const data = await res.json();
+      alert(data.error?.message || 'Lỗi duyệt tài khoản');
+    }
+  } catch (error) {
+    console.error('Approve error:', error);
+    alert('Lỗi kết nối máy chủ');
+  }
+}
+
+async function rejectUser(userId) {
+  if (!confirm('Bạn có chắc muốn từ chối và xóa tài khoản này?')) return;
+  
+  try {
+    const res = await fetch('/api/v1/admin/users/' + userId + '/reject', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    if (res.ok) {
+      alert('Đã từ chối tài khoản');
+      loadPendingUsers();
+    } else {
+      const data = await res.json();
+      alert(data.error?.message || 'Lỗi từ chối tài khoản');
+    }
+  } catch (error) {
+    console.error('Reject error:', error);
+    alert('Lỗi kết nối máy chủ');
+  }
+}
+
+// Load pending count on page load
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const res = await fetch('/api/v1/admin/users/pending', { credentials: 'include' });
+    if (res.ok) {
+      const result = await res.json();
+      document.getElementById('pendingCount').textContent = (result.data || []).length;
+    }
+  } catch (error) {
+    console.error('Load pending count error:', error);
+  }
+});
+</script>
+
+<%- include('../../partials/dashboard-layout-footer') %>

@@ -1,0 +1,118 @@
+<%- include('../../partials/app-header', { user, currentPage: 'classes', title: 'Lớp học của tôi' }) %>
+
+<section class="space-y-6">
+  <div class="section-heading">
+    <div>
+      <p class="text-sm text-text-muted uppercase tracking-wide">Giáo viên</p>
+      <h1 class="text-2xl font-semibold">Lớp học phụ trách</h1>
+    </div>
+    <p class="text-sm text-text-muted">
+      Dữ liệu hiển thị theo quyền truy cập của bạn
+    </p>
+  </div>
+
+  <div id="classesLoading" class="card text-center py-10">
+    <svg class="mx-auto h-8 w-8 animate-spin text-primary" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V2C5.373 2 0 7.373 0 14h4z"></path>
+    </svg>
+    <p class="text-sm text-text-muted mt-3">Đang tải danh sách lớp...</p>
+  </div>
+
+  <div id="classesContent" class="hidden space-y-4">
+    <div class="grid gap-3 md:grid-cols-3">
+      <div class="card border-l-4 border-primary">
+        <p class="text-sm text-text-muted uppercase tracking-wide">Tổng số lớp</p>
+        <p id="totalClasses" class="text-3xl font-semibold mt-2">0</p>
+      </div>
+      <div class="card border-l-4 border-success">
+        <p class="text-sm text-text-muted uppercase tracking-wide">Tổng học sinh</p>
+        <p id="totalStudents" class="text-3xl font-semibold mt-2">0</p>
+      </div>
+      <div class="card border-l-4 border-secondary">
+        <p class="text-sm text-text-muted uppercase tracking-wide">Lớp chủ nhiệm</p>
+        <p id="homeroomClass" class="text-xl font-semibold mt-2">--</p>
+      </div>
+    </div>
+
+    <div id="classesGrid" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3"></div>
+  </div>
+
+  <div id="classesError" class="card hidden text-center text-text-muted py-8">
+    <p>Không có lớp học nào được phân cho bạn.</p>
+  </div>
+</section>
+
+<script>
+  async function loadClasses() {
+    try {
+      const res = await fetch('/api/v1/app/teacher/classes', {
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error('Failed to fetch classes');
+
+      const result = await res.json();
+      const classes = result.data || [];
+
+      document.getElementById('classesLoading').classList.add('hidden');
+
+      if (classes.length === 0) {
+        document.getElementById('classesError').classList.remove('hidden');
+        return;
+      }
+
+      document.getElementById('classesContent').classList.remove('hidden');
+
+      const totalClasses = classes.length;
+      const totalStudents = classes.reduce((sum, cls) => sum + (cls.studentCount || 0), 0);
+      const homeroomClass = classes.find(cls => cls.homeroomTeacher?._id === '<%= user._id %>');
+
+      document.getElementById('totalClasses').textContent = totalClasses;
+      document.getElementById('totalStudents').textContent = totalStudents;
+      document.getElementById('homeroomClass').textContent = homeroomClass ? homeroomClass.className : '---';
+
+      const grid = document.getElementById('classesGrid');
+      grid.innerHTML = classes.map(cls => {
+        const isHomeroom = cls.homeroomTeacher?._id === '<%= user._id %>';
+        const badge = isHomeroom ? '<span class="badge badge-info">Chủ nhiệm</span>' : '';
+
+        return `
+          <div class="card space-y-3">
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <p class="text-sm text-text-muted uppercase tracking-wide">Lớp</p>
+                <h3 class="text-lg font-semibold">${cls.className || 'N/A'}</h3>
+              </div>
+              ${badge}
+            </div>
+            <dl class="text-sm space-y-1 text-text-muted">
+              <div class="flex justify-between">
+                <dt>Sĩ số</dt>
+                <dd class="font-semibold text-text-dark">${cls.studentCount || 0}</dd>
+              </div>
+              <div class="flex justify-between">
+                <dt>GVCN</dt>
+                <dd class="font-semibold text-text-dark">${cls.homeroomTeacher?.fullName || '---'}</dd>
+              </div>
+              <div class="flex justify-between">
+                <dt>Năm học</dt>
+                <dd class="font-semibold text-text-dark">${cls.academicYear || '---'}</dd>
+              </div>
+            </dl>
+            <div class="flex gap-2 pt-2 border-t border-border">
+              <a href="/students?classId=${cls._id}" class="btn btn-secondary btn-sm flex-1 text-center">Học sinh</a>
+              <a href="/scores?classId=${cls._id}" class="btn btn-primary btn-sm flex-1 text-center">Điểm số</a>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (error) {
+      document.getElementById('classesLoading').classList.add('hidden');
+      document.getElementById('classesError').classList.remove('hidden');
+    }
+  }
+
+  loadClasses();
+</script>
+
+<%- include('../../partials/app-footer') %>

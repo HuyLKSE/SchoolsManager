@@ -1,0 +1,474 @@
+<%- include('../partials/dashboard-layout-header', { title: 'Quản lý Thanh toán' }) %>
+
+<section class="space-y-6">
+  <div class="section-heading">
+    <div>
+      <p class="text-sm text-text-muted uppercase tracking-wide">Tài chính</p>
+      <h2 class="text-2xl font-bold">Lịch sử thanh toán học phí</h2>
+    </div>
+    <% if (user && user.hasPermission && user.hasPermission('canCreate')) { %>
+      <button onclick="showRecordPaymentModal()" class="btn btn-primary">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M12 5v14m7-7H5" />
+        </svg>
+        Ghi nhận thanh toán
+      </button>
+    <% } else { %>
+      <span class="px-4 py-2 text-sm text-gray-500 bg-gray-100 rounded-lg">Chế độ xem (View Only)</span>
+    <% } %>
+  </div>
+
+  <div class="filter-section">
+    <form id="filterForm" class="filter-form">
+      <input type="text" name="search" placeholder="Tìm theo mã HS hoặc tên..." class="form-control">
+      <select name="status" class="form-control">
+        <option value="">Trạng thái</option>
+        <option value="Đã thanh toán">Đã thanh toán</option>
+        <option value="Chưa thanh toán">Chưa thanh toán</option>
+        <option value="Quá hạn">Quá hạn</option>
+      </select>
+      <select name="paymentMethod" class="form-control">
+        <option value="">Phương thức</option>
+        <option value="Tiền mặt">Tiền mặt</option>
+        <option value="Chuyển khoản">Chuyển khoản</option>
+        <option value="Thẻ">Thẻ</option>
+      </select>
+      <button type="submit" class="btn btn-secondary justify-center">Áp dụng</button>
+    </form>
+  </div>
+
+  <div class="grid gap-4 md:grid-cols-3 mb-6">
+    <div class="stat-card">
+      <div class="rounded-2xl bg-success/10 p-4 text-success">
+        <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <div>
+        <p class="stat-label">Tổng thu tháng này</p>
+        <p class="stat-value" id="totalRevenue">0 ₫</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="rounded-2xl bg-info/10 p-4 text-info">
+        <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      </div>
+      <div>
+        <p class="stat-label">Đã thanh toán</p>
+        <p class="stat-value" id="paidCount">0</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="rounded-2xl bg-warning/10 p-4 text-warning">
+        <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <div>
+        <p class="stat-label">Chưa thanh toán</p>
+        <p class="stat-value" id="unpaidCount">0</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Mã HS</th>
+          <th>Họ tên</th>
+          <th>Khoản phí</th>
+          <th>Số tiền</th>
+          <th>Ngày thanh toán</th>
+          <th>Phương thức</th>
+          <th>Trạng thái</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="paymentList">
+        <tr>
+          <td colspan="8">
+            <div class="empty-state">Đang tải dữ liệu thanh toán...</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div id="pagination" class="pagination"></div>
+</section>
+
+<script>
+  // Inject user permissions
+  const userPermissions = {
+    canCreate: <%= user && user.hasPermission && user.hasPermission('canCreate') ? 'true' : 'false' %>,
+    canUpdate: <%= user && user.hasPermission && user.hasPermission('canUpdate') ? 'true' : 'false' %>,
+    canDelete: <%= user && user.hasPermission && user.hasPermission('canDelete') ? 'true' : 'false' %>,
+  };
+
+  document.getElementById('filterForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    loadPayments(1, getFilters());
+  });
+
+  loadPayments();
+  loadStatistics();
+
+  async function loadPayments(page = 1, filters = {}) {
+    try {
+      const params = new URLSearchParams({ page, limit: 20, ...filters });
+      const response = await fetch(`/api/v1/payments?${params}`, { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed');
+      const result = await response.json();
+      renderPayments(result.data);
+      renderPagination(result.meta);
+    } catch (error) {
+      document.getElementById('paymentList').innerHTML = `
+        <tr>
+          <td colspan="8">
+            <div class="empty-state text-danger">Không thể tải dữ liệu thanh toán</div>
+          </td>
+        </tr>`;
+    }
+  }
+
+  function renderPayments(payments) {
+    const tbody = document.getElementById('paymentList');
+    if (!payments || payments.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8">
+            <div class="empty-state">Chưa có giao dịch nào</div>
+          </td>
+        </tr>`;
+      return;
+    }
+
+    const currency = new Intl.NumberFormat('vi-VN');
+
+    tbody.innerHTML = payments.map(p => {
+      const statusClass = {
+        'Đã thanh toán': 'badge badge-success',
+        'Chưa thanh toán': 'badge badge-warning',
+        'Quá hạn': 'badge badge-danger',
+      }[p.status] || 'badge';
+
+      const date = p.paymentDate ? new Date(p.paymentDate).toLocaleDateString('vi-VN') : '--';
+      const amount = currency.format(p.amount) + ' ₫';
+      const studentName = p.studentId?.fullName || '--';
+      const studentCode = p.studentId?.studentCode || '--';
+      const feeName = p.feeId?.feeName || '--';
+
+      return `
+        <tr>
+          <td>${studentCode}</td>
+          <td class="font-semibold">${studentName}</td>
+          <td>${feeName}</td>
+          <td>${amount}</td>
+          <td>${date}</td>
+          <td>${p.paymentMethod || '--'}</td>
+          <td><span class="${statusClass}">${p.status}</span></td>
+          <td>
+            <div class="flex gap-2">
+              ${userPermissions.canDelete ? `<button onclick="deletePayment('${p._id}')" class="btn btn-danger btn-sm">Xóa</button>` : ''}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  async function loadStatistics() {
+    try {
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+      const params = new URLSearchParams({ startDate: startOfMonth, endDate: endOfMonth });
+      const response = await fetch(`/api/v1/payments/statistics/financial?${params}`, { credentials: 'include' });
+      if (!response.ok) return;
+      const result = await response.json();
+      const stats = result.data || {};
+
+      const monthlyEntry = (stats.byMonth || []).find(
+        (item) => item._id?.year === now.getFullYear() && item._id?.month === now.getMonth() + 1
+      );
+      document.getElementById('totalRevenue').textContent = formatCurrency(monthlyEntry?.totalCollected || 0);
+
+      const paidCount = getStatusCount(stats.paymentStatusStats, 'Đã thanh toán');
+      document.getElementById('paidCount').textContent = numberFormatter.format(paidCount);
+
+      const unpaid =
+        getStatusCount(stats.paymentStatusStats, 'Chưa thanh toán') +
+        getStatusCount(stats.paymentStatusStats, 'Thanh toán một phần') +
+        getStatusCount(stats.paymentStatusStats, 'Quá hạn');
+      document.getElementById('unpaidCount').textContent = numberFormatter.format(unpaid);
+    } catch (error) {
+      console.warn('Không thể tải thống kê', error);
+    }
+  }
+
+  function getStatusCount(collection = [], status) {
+    if (!Array.isArray(collection)) return 0;
+    return collection.find((item) => item._id === status)?.count || 0;
+  }
+
+  function formatCurrency(value) {
+    if (typeof value !== 'number' || Number.isNaN(value)) {
+      return '--';
+    }
+    return currencyFormatter.format(value);
+  }
+
+  function renderPagination(meta) {
+    const pagination = document.getElementById('pagination');
+    if (!meta) return;
+    const totalPages = Math.ceil(meta.total / meta.limit);
+    if (totalPages <= 1) {
+      pagination.innerHTML = '';
+      return;
+    }
+
+    let html = '';
+    html += `<button ${meta.page === 1 ? 'disabled' : ''} onclick="loadPayments(${meta.page - 1}, getFilters())">Trước</button>`;
+
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || Math.abs(i - meta.page) <= 1) {
+        html += `<button class="${i === meta.page ? 'active' : ''}" onclick="loadPayments(${i}, getFilters())">${i}</button>`;
+      } else if (Math.abs(i - meta.page) === 2) {
+        html += '<span class="px-2 text-text-muted">...</span>';
+      }
+    }
+
+    html += `<button ${!meta.hasNext ? 'disabled' : ''} onclick="loadPayments(${meta.page + 1}, getFilters())">Sau</button>`;
+    pagination.innerHTML = html;
+  }
+
+  function getFilters() {
+    const form = document.getElementById('filterForm');
+    const formData = new FormData(form);
+    const filters = {};
+    for (let [key, value] of formData.entries()) {
+      if (value) filters[key] = value;
+    }
+    return filters;
+  }
+
+  async function deletePayment(id) {
+    if (!confirm('Bạn có chắc chắn muốn xóa giao dịch này?')) return;
+    
+    try {
+      const response = await fetch(`/api/v1/payments/${id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Không thể xóa');
+      }
+      
+      alert('Xóa giao dịch thành công');
+      loadPayments(1, getFilters());
+      loadStatistics();
+    } catch (error) {
+      alert('Lỗi: ' + error.message);
+    }
+  }
+
+  // Payment Record Modal Functions
+  let selectedStudent = null;
+  let selectedFee = null;
+
+  function showRecordPaymentModal() {
+    document.getElementById('recordPaymentModal').classList.remove('hidden');
+    loadStudentsForPayment();
+    loadFeesForPayment();
+  }
+
+  function closeRecordPaymentModal() {
+    document.getElementById('recordPaymentModal').classList.add('hidden');
+    document.getElementById('recordPaymentForm').reset();
+    selectedStudent = null;
+    selectedFee = null;
+  }
+
+  async function loadStudentsForPayment() {
+    try {
+      const statusParam = encodeURIComponent('Đang học');
+      const res = await fetch(`/api/v1/students?limit=1000&status=${statusParam}`, { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        const select = document.getElementById('paymentStudentId');
+        select.innerHTML = '<option value="">-- Chọn học sinh --</option>';
+        data.data.forEach(student => {
+          const option = document.createElement('option');
+          option.value = student._id;
+          option.textContent = `${student.studentCode} - ${student.fullName}`;
+          select.appendChild(option);
+        });
+      }
+    } catch (error) {
+      console.error('Lỗi tải danh sách học sinh:', error);
+    }
+  }
+
+  async function loadFeesForPayment() {
+    try {
+      const params = new URLSearchParams({
+        isActive: 'true',
+        limit: 1000,
+      });
+      const res = await fetch(`/api/v1/fees?${params.toString()}`, { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        const select = document.getElementById('paymentFeeId');
+        select.innerHTML = '<option value="">-- Chọn khoản phí --</option>';
+        data.data.forEach(fee => {
+          const option = document.createElement('option');
+          const amountValue = Number(fee.amount) || 0;
+          option.value = fee._id;
+          option.dataset.amount = amountValue;
+          option.textContent = `${fee.feeName} - ${amountValue.toLocaleString('vi-VN')}₫`;
+          select.appendChild(option);
+        });
+      }
+    } catch (error) {
+      console.error('Lỗi tải danh sách học phí:', error);
+    }
+  }
+
+  // Auto-fill amount when fee is selected
+  document.addEventListener('DOMContentLoaded', function() {
+    const feeSelect = document.getElementById('paymentFeeId');
+    const amountInput = document.getElementById('paymentAmount');
+    
+    if (feeSelect) {
+      feeSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        if (selectedOption.dataset.amount) {
+          amountInput.value = selectedOption.dataset.amount;
+        }
+      });
+    }
+  });
+
+  async function submitPaymentRecord(event) {
+    event.preventDefault();
+    
+    const formData = {
+      studentId: document.getElementById('paymentStudentId').value,
+      feeId: document.getElementById('paymentFeeId').value,
+      amount: parseFloat(document.getElementById('paymentAmount').value),
+      paymentDate: document.getElementById('paymentDate').value,
+      paymentMethod: document.getElementById('paymentMethod').value,
+      note: document.getElementById('paymentNote').value
+    };
+
+    // Validation
+    if (!formData.studentId || !formData.feeId) {
+      alert('Vui lòng chọn học sinh và khoản phí');
+      return;
+    }
+
+    if (!formData.amount || formData.amount <= 0) {
+      alert('Vui lòng nhập số tiền hợp lệ');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/v1/payments/record', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(formData)
+      });
+
+      if (res.ok) {
+        alert('✅ Ghi nhận thanh toán thành công');
+        closeRecordPaymentModal();
+        loadPayments(1, getFilters());
+        loadStatistics();
+      } else {
+        const error = await res.json();
+        alert('❌ Lỗi: ' + (error.error?.message || 'Không thể ghi nhận thanh toán'));
+      }
+    } catch (error) {
+      console.error('Lỗi ghi nhận thanh toán:', error);
+      alert('❌ Lỗi kết nối đến server');
+    }
+  }
+</script>
+
+<!-- Payment Record Modal -->
+<div id="recordPaymentModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
+      <h3 class="text-xl font-bold">Ghi nhận thanh toán</h3>
+      <button onclick="closeRecordPaymentModal()" class="text-gray-400 hover:text-gray-600">
+        <%- icon('x-mark', 'h-6 w-6') %>
+      </button>
+    </div>
+    
+    <form id="recordPaymentForm" onsubmit="submitPaymentRecord(event)" class="p-6 space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Học sinh *</label>
+        <select id="paymentStudentId" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500">
+          <option value="">-- Đang tải... --</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Khoản phí *</label>
+        <select id="paymentFeeId" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500">
+          <option value="">-- Đang tải... --</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Số tiền (VNĐ) *</label>
+        <input type="number" id="paymentAmount" required min="1000" step="1000" 
+               class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
+               placeholder="Nhập số tiền">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Ngày thanh toán *</label>
+        <input type="date" id="paymentDate" required 
+               class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Phương thức thanh toán *</label>
+        <select id="paymentMethod" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500">
+          <option value="">-- Chọn phương thức --</option>
+          <option value="cash">Tiền mặt</option>
+          <option value="bank_transfer">Chuyển khoản</option>
+          <option value="card">Thẻ ATM/Credit</option>
+          <option value="ewallet">Ví điện tử</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Ghi chú</label>
+        <textarea id="paymentNote" rows="3" 
+                  class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
+                  placeholder="Ghi chú thêm về giao dịch (không bắt buộc)"></textarea>
+      </div>
+
+      <div class="flex gap-3 pt-4 border-t">
+        <button type="button" onclick="closeRecordPaymentModal()" 
+                class="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50">
+          Hủy
+        </button>
+        <button type="submit" 
+                class="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+          Xác nhận thanh toán
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('../partials/dashboard-layout-footer') %>

@@ -1,0 +1,129 @@
+<%- include('../../partials/dashboard-layout-header', { title: 'Admin Dashboard', user }) %>
+
+<!-- Page Header -->
+<div class="mb-8">
+  <h1 class="text-3xl font-bold text-gray-900">Bảng Điều Khiển Admin</h1>
+  <p class="mt-2 text-gray-600">Tổng quan toàn bộ hệ thống trường học</p>
+</div>
+
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+  <!-- Total Users -->
+  <div class="bg-white rounded-lg shadow p-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm font-medium text-gray-600">Tổng Người Dùng</p>
+        <p class="mt-2 text-3xl font-bold text-gray-900"><%= stats.totalUsers %></p>
+      </div>
+      <div class="p-3 bg-blue-100 rounded-full">
+        <%- icon('users', 'h-8 w-8 text-blue-600') %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Total Students -->
+  <div class="bg-white rounded-lg shadow p-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm font-medium text-gray-600">Tổng Học Sinh</p>
+        <p class="mt-2 text-3xl font-bold text-gray-900"><%= stats.totalStudents %></p>
+      </div>
+      <div class="p-3 bg-green-100 rounded-full">
+        <%- icon('academic-cap', 'h-8 w-8 text-green-600') %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Total Classes -->
+  <div class="bg-white rounded-lg shadow p-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm font-medium text-gray-600">Tổng Lớp Học</p>
+        <p class="mt-2 text-3xl font-bold text-gray-900"><%= stats.totalClasses %></p>
+      </div>
+      <div class="p-3 bg-purple-100 rounded-full">
+        <%- icon('clipboard', 'h-8 w-8 text-purple-600') %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Total Payments -->
+  <div class="bg-white rounded-lg shadow p-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm font-medium text-gray-600">Tổng Thanh Toán</p>
+        <p class="mt-2 text-3xl font-bold text-gray-900"><%= stats.totalPayments %></p>
+      </div>
+      <div class="p-3 bg-yellow-100 rounded-full">
+        <%- icon('currency-dollar', 'h-8 w-8 text-yellow-600') %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Row -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+  <!-- Attendance Stats This Week -->
+  <div class="bg-white rounded-lg shadow p-6">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">Thống Kê Chuyên Cần (Tuần Này)</h3>
+    <div class="space-y-3">
+      <% stats.attendanceStats.forEach(stat => { %>
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-medium text-gray-600">
+            <%= stat._id === 'present' ? '✅ Có mặt' : stat._id === 'absent' ? '❌ Vắng' : stat._id === 'late' ? '⏰ Trễ' : '📋 Có phép' %>
+          </span>
+          <span class="text-lg font-bold 
+            <%= stat._id === 'present' ? 'text-green-600' : stat._id === 'absent' ? 'text-red-600' : stat._id === 'late' ? 'text-yellow-600' : 'text-blue-600' %>">
+            <%= stat.count %>
+          </span>
+        </div>
+      <% }); %>
+      <% if (stats.attendanceStats.length === 0) { %>
+        <p class="text-sm text-gray-500">Chưa có dữ liệu chuyên cần tuần này</p>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Average Scores by Grade -->
+  <div class="bg-white rounded-lg shadow p-6">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">Điểm Trung Bình Theo Khối</h3>
+    <div class="space-y-3">
+      <% stats.scoreStats.forEach(stat => { %>
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-medium text-gray-600">Khối <%= stat._id %></span>
+          <span class="text-lg font-bold text-blue-600"><%= stat.avgScore.toFixed(2) %></span>
+        </div>
+      <% }); %>
+      <% if (stats.scoreStats.length === 0) { %>
+        <p class="text-sm text-gray-500">Chưa có dữ liệu điểm số</p>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="bg-white rounded-lg shadow p-6">
+  <h3 class="text-lg font-semibold text-gray-900 mb-4">Hành Động Nhanh</h3>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <a href="/api/v1/admin/users" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+      <%- icon('users', 'h-6 w-6 text-blue-600 mr-3') %>
+      <span class="font-medium text-gray-900">Quản Lý Người Dùng</span>
+    </a>
+    <a href="/api/v1/admin/school-settings" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+      <%- icon('cog', 'h-6 w-6 text-gray-600 mr-3') %>
+      <span class="font-medium text-gray-900">Cài Đặt Trường</span>
+    </a>
+    <button onclick="openBulkImportModal()" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition text-left">
+      <%- icon('arrow-right', 'h-6 w-6 text-green-600 mr-3') %>
+      <span class="font-medium text-gray-900">Import Học Sinh</span>
+    </button>
+  </div>
+</div>
+
+<script>
+function openBulkImportModal() {
+  alert('Chức năng import CSV sẽ được triển khai tiếp theo');
+}
+</script>
+
+<%- include('../../partials/dashboard-layout-footer') %>

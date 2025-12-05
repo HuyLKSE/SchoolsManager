@@ -1,0 +1,289 @@
+<%
+  const pageTitle = typeof title !== 'undefined' ? title : 'QLHS';
+  const roleLabels = {
+    admin: 'Quản trị viên',
+    teacher: 'Giáo viên',
+    student: 'Học sinh',
+    parent: 'Phụ huynh',
+    user: 'Người dùng'
+  };
+  const navItems = [
+    { key: 'home', label: 'Trang chủ', href: '/app/home', roles: ['teacher', 'student', 'parent', 'user', 'admin'] },
+    { key: 'classes', label: 'Lớp học', href: '/app/classes', roles: ['teacher', 'admin'] },
+    { key: 'profile', label: 'Hồ sơ', href: '/app/profile', roles: ['student', 'admin'] },
+    { key: 'scores', label: 'Điểm số', href: '/app/scores', roles: ['student', 'admin'] },
+    { key: 'attendance', label: 'Điểm danh', href: '/app/attendance', roles: ['student', 'admin'] },
+    { key: 'children', label: 'Con em', href: '/app/children', roles: ['parent', 'admin'] },
+  ].filter(item => item.roles.includes(user.role));
+  const hasPermission = (perm) => {
+    if (!user) return false;
+    if (typeof user.hasPermission === 'function') {
+      return user.hasPermission(perm);
+    }
+    return !!(user.permissions && user.permissions[perm]);
+  };
+  const permissionBadges = [
+    { key: 'canCreate', label: 'Tạo dữ liệu' },
+    { key: 'canUpdate', label: 'Chỉnh sửa' },
+    { key: 'canDelete', label: 'Xóa dữ liệu' },
+    { key: 'canViewAll', label: 'Xem toàn trường' },
+    { key: 'canManageUsers', label: 'Quản lý người dùng' },
+    { key: 'canManageSchool', label: 'Thiết lập trường' },
+  ];
+  const activePermissionBadges = permissionBadges.filter(badge => hasPermission(badge.key));
+  const showAdminShortcut = user.role === 'admin' || hasPermission('canManageUsers');
+%>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= pageTitle %> - QLHS</title>
+  <link rel="stylesheet" href="/css/style.css?v=<%= Date.now() %>">
+  <style>
+    :root {
+      --page-bg: #f6f7fb;
+      --surface: #ffffff;
+      --border: #e5e7eb;
+      --text: #0f172a;
+      --muted: #475569;
+      --primary: #2563eb;
+      --primary-soft: #e3edff;
+      --danger: #dc2626;
+    }
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--page-bg);
+      color: var(--text);
+    }
+    .app-shell {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .app-topbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .app-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .app-brand a {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .app-role-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: var(--primary-soft);
+      color: var(--primary);
+      text-transform: capitalize;
+    }
+    .app-nav {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .app-nav-link {
+      padding: 0.35rem 0.75rem;
+      border-radius: 0.5rem;
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 500;
+      border: 1px solid transparent;
+      transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+    .app-nav-link:hover {
+      color: var(--primary);
+      border-color: var(--primary-soft);
+    }
+    .app-nav-link.is-active {
+      color: #fff;
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+    .app-user {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .app-user-meta {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+    .app-user-meta span {
+      font-weight: 600;
+    }
+    .app-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      background: var(--surface);
+      color: var(--primary);
+    }
+    .app-logout-btn {
+      border: 1px solid transparent;
+      background: var(--danger);
+      color: #fff;
+      padding: 0.5rem 0.9rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .app-logout-btn:hover {
+      background: #b91c1c;
+    }
+    .app-meta-bar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .app-meta-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .text-muted {
+      color: var(--muted);
+    }
+    .permission-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .permission-chip {
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      border: 1px dashed var(--border);
+      color: var(--muted);
+    }
+    .permission-chip.is-active {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+    .app-meta-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .app-meta-actions a {
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 0.45rem 0.9rem;
+      font-weight: 500;
+      text-decoration: none;
+      color: var(--text);
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+    .app-meta-actions a:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .app-main {
+      flex: 1;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 3rem;
+    }
+    @media (max-width: 768px) {
+      .app-user-meta {
+        display: none;
+      }
+      .app-meta-bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .app-main {
+        padding: 1.5rem 1rem 2.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-topbar">
+      <div class="app-brand">
+        <a href="/app/home">QLHS</a>
+        <span class="app-role-badge role-<%= user.role %>"><%= roleLabels[user.role] || user.role %></span>
+      </div>
+      <nav class="app-nav" aria-label="Điều hướng">
+        <% if (navItems.length === 0) { %>
+          <span class="text-sm text-muted">Chưa có mục điều hướng cho vai trò này.</span>
+        <% } else { %>
+          <% navItems.forEach(item => { %>
+            <a href="<%= item.href %>" class="app-nav-link <%= currentPage === item.key ? 'is-active' : '' %>">
+              <%= item.label %>
+            </a>
+          <% }); %>
+        <% } %>
+      </nav>
+      <div class="app-user">
+        <div class="app-user-meta">
+          <span><%= user.fullName || user.username %></span>
+          <small class="text-sm text-muted">@<%= user.username %></small>
+        </div>
+        <div class="app-avatar"><%= (user.fullName || user.username || 'U').charAt(0).toUpperCase() %></div>
+        <button type="button" onclick="logout()" class="app-logout-btn">Đăng xuất</button>
+      </div>
+    </header>
+    <section class="app-meta-bar">
+      <div class="app-meta-info">
+        <p class="text-sm text-muted">Vai trò hiện tại</p>
+        <strong><%= roleLabels[user.role] || user.role %></strong>
+        <div class="permission-chips">
+          <% if (activePermissionBadges.length > 0) { %>
+            <% activePermissionBadges.forEach(badge => { %>
+              <span class="permission-chip is-active"><%= badge.label %></span>
+            <% }); %>
+          <% } else { %>
+            <span class="permission-chip">Chỉ có quyền xem dữ liệu</span>
+          <% } %>
+        </div>
+      </div>
+      <div class="app-meta-actions">
+        <% if (hasPermission('canCreate')) { %>
+          <a href="/students/create">Tạo học sinh</a>
+        <% } %>
+        <% if (hasPermission('canViewAll')) { %>
+          <a href="/students">Danh sách học sinh</a>
+        <% } %>
+        <% if (showAdminShortcut) { %>
+          <a href="/admin/dashboard">Trang quản trị</a>
+        <% } %>
+      </div>
+    </section>
+    <main class="app-main">

@@ -1,0 +1,519 @@
+<%- include('../partials/dashboard-layout-header', { title: 'Nhập điểm' }) %>
+
+  <div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold font-display text-text-dark">Nhập điểm</h1>
+        <p class="text-text-muted mt-1">Quản lý điểm số và kết quả học tập</p>
+      </div>
+    </div>
+
+    <!-- Selection Card -->
+    <div class="bg-white border border-border rounded-2xl p-6 shadow-sm">
+      <form id="selectForm" class="grid gap-6 lg:grid-cols-3 items-end">
+        <!-- Row 1 -->
+        <div class="space-y-2">
+          <label class="text-sm font-bold text-text-dark">Lớp học</label>
+          <div class="relative">
+            <select name="classId" id="classSelect"
+              class="form-control w-full rounded-xl border-gray-200 bg-gray-50 focus:bg-white transition-colors appearance-none py-2.5 pl-4 pr-10"
+              required>
+              <option value="">-- Chọn lớp --</option>
+            </select>
+            <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-text-muted">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-sm font-bold text-text-dark">Môn học</label>
+          <div class="relative">
+            <select name="subjectId" id="subjectSelect"
+              class="form-control w-full rounded-xl border-gray-200 bg-gray-50 focus:bg-white transition-colors appearance-none py-2.5 pl-4 pr-10"
+              required>
+              <option value="">-- Chọn môn --</option>
+            </select>
+            <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-text-muted">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-sm font-bold text-text-dark">Học kỳ</label>
+          <div class="relative">
+            <select name="semester" id="semesterSelect"
+              class="form-control w-full rounded-xl border-gray-200 bg-gray-50 focus:bg-white transition-colors appearance-none py-2.5 pl-4 pr-10"
+              required>
+              <option value="1">Học kỳ 1</option>
+              <option value="2">Học kỳ 2</option>
+            </select>
+            <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-text-muted">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 2 -->
+        <div class="space-y-2">
+          <label class="text-sm font-bold text-text-dark">Năm học</label>
+          <input type="text" name="academicYear" id="academicYear"
+            class="form-control w-full rounded-xl border-gray-200 bg-gray-50 focus:bg-white transition-colors py-2.5 px-4"
+            placeholder="VD: 2023-2024" required />
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-sm font-bold text-text-dark">Loại điểm</label>
+          <div class="relative">
+            <select name="scoreType" id="scoreType"
+              class="form-control w-full rounded-xl border-gray-200 bg-gray-50 focus:bg-white transition-colors appearance-none py-2.5 pl-4 pr-10"
+              required>
+              <option value="">-- Chọn loại điểm --</option>
+              <option value="Miệng">Điểm Miệng</option>
+              <option value="15 phút">Điểm 15 phút</option>
+              <option value="1 tiết">Điểm 1 tiết</option>
+              <option value="Giữa kỳ">Điểm Giữa kỳ</option>
+              <option value="Cuối kỳ">Điểm Cuối kỳ</option>
+            </select>
+            <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-text-muted">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit"
+          class="btn btn-primary justify-center py-2.5 rounded-xl font-medium shadow-lg shadow-primary-500/20 hover:shadow-primary-500/30 transition-all">
+          Tải bảng điểm
+        </button>
+      </form>
+    </div>
+
+    <!-- Score Table Container -->
+    <div id="scoreTableContainer" class="hidden space-y-4">
+      <!-- Info Bar -->
+      <div
+        class="bg-gradient-to-r from-primary-600 to-primary-800 rounded-2xl p-5 text-white shadow-lg shadow-primary-500/20 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p class="text-primary-100 text-xs font-bold uppercase tracking-wider mb-1">Đang nhập điểm</p>
+          <h3 class="text-xl font-bold font-display" id="classInfo">--</h3>
+        </div>
+        <div class="flex items-center gap-3">
+          <span id="scoreTypeInfo"
+            class="bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-lg text-sm font-medium">--</span>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="flex flex-wrap items-center justify-between gap-3 px-2">
+        <p id="scoreSummaryText" class="text-sm font-medium text-text-muted">Chưa tải dữ liệu</p>
+        <label class="inline-flex items-center gap-2 text-sm font-medium text-text-dark cursor-pointer select-none">
+          <input type="checkbox" id="missingToggle"
+            class="form-checkbox rounded text-primary-600 border-gray-300 focus:ring-primary-500">
+          <span>Chỉ hiện HS chưa có điểm</span>
+        </label>
+      </div>
+
+      <!-- Table -->
+      <div class="bg-white border border-border rounded-2xl shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <th class="px-6 py-4 w-16 text-center">STT</th>
+                <th class="px-6 py-4 w-32">Mã HS</th>
+                <th class="px-6 py-4">Họ tên</th>
+                <th class="px-6 py-4 w-32">Điểm số</th>
+                <th class="px-6 py-4">Ghi chú</th>
+              </tr>
+            </thead>
+            <tbody id="scoreList" class="divide-y divide-border">
+              <!-- Rows injected here -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Footer Actions -->
+        <% if (user && user.hasPermission && (user.hasPermission('canCreate') || user.hasPermission('canUpdate'))) { %>
+          <div class="p-4 border-t border-gray-200 bg-gray-50 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+              <span id="scoreSaveStatus" class="text-xs font-medium text-text-muted hidden flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Đã lưu
+              </span>
+              <p id="scoreDraftInfo" class="hidden text-xs text-text-muted italic"></p>
+            </div>
+            <div class="flex gap-3">
+              <button type="button"
+                class="btn btn-secondary text-danger hover:bg-danger/5 hover:text-danger border-danger/20"
+                onclick="clearAll()">
+                Xóa tất cả
+              </button>
+              <button type="button" class="btn btn-success shadow-lg shadow-green-500/20" onclick="saveScores()">
+                Lưu bảng điểm
+              </button>
+            </div>
+          </div>
+          <% } %>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const userPermissions = {
+      canCreate: <%= user && user.hasPermission && user.hasPermission('canCreate') ? 'true' : 'false' %>,
+      canUpdate: <%= user && user.hasPermission && user.hasPermission('canUpdate') ? 'true' : 'false' %>,
+        canDelete: <%= user && user.hasPermission && user.hasPermission('canDelete') ? 'true' : 'false' %>,
+  };
+
+    let currentConfig = {};
+    let currentStudents = [];
+    let hideCompleted = false;
+    const scoreSummaryText = document.getElementById('scoreSummaryText');
+    const missingToggle = document.getElementById('missingToggle');
+    const scoreDraftInfo = document.getElementById('scoreDraftInfo');
+    const scoreSaveStatus = document.getElementById('scoreSaveStatus');
+    const SCORE_DRAFT_PREFIX = 'scoreDraft:';
+    let scoreDraftKey = null;
+    let scoreDirty = false;
+    let scoreLastSavedAt = null;
+
+    document.getElementById('selectForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      currentConfig = {
+        classId: document.getElementById('classSelect').value,
+        subjectId: document.getElementById('subjectSelect').value,
+        semester: document.getElementById('semesterSelect').value,
+        academicYear: document.getElementById('academicYear').value,
+        scoreType: document.getElementById('scoreType').value,
+      };
+      if (!currentConfig.classId || !currentConfig.subjectId || !currentConfig.scoreType) {
+        window.showToast?.('Vui lòng chọn đầy đủ thông tin', 'error');
+        return;
+      }
+      scoreDraftKey = getScoreDraftKey(currentConfig);
+      await loadScoreTable();
+    });
+
+    if (missingToggle) {
+      missingToggle.addEventListener('change', () => {
+        hideCompleted = missingToggle.checked;
+        renderScoreTable(currentStudents);
+      });
+    }
+
+    loadClasses();
+    loadSubjects();
+
+    async function loadClasses() {
+      try {
+        const response = await fetch('/api/v1/classes?limit=100', { credentials: 'include' });
+        if (!response.ok) return;
+        const result = await response.json();
+        const select = document.getElementById('classSelect');
+        result.data.forEach((c) => {
+          const option = document.createElement('option');
+          option.value = c._id;
+          option.textContent = `${c.className} - Khối ${c.grade}`;
+          select.appendChild(option);
+        });
+      } catch (error) {
+        console.warn('Không thể tải danh sách lớp');
+      }
+    }
+
+    async function loadSubjects() {
+      try {
+        const response = await fetch('/api/v1/subjects?limit=100', { credentials: 'include' });
+        if (!response.ok) return;
+        const result = await response.json();
+        const select = document.getElementById('subjectSelect');
+        result.data.forEach((s) => {
+          const option = document.createElement('option');
+          option.value = s._id;
+          option.textContent = s.subjectName;
+          select.appendChild(option);
+        });
+      } catch (error) {
+        console.warn('Không thể tải danh sách môn');
+      }
+    }
+
+    async function loadScoreTable() {
+      try {
+        const params = new URLSearchParams(currentConfig);
+        const response = await fetch(`/api/v1/scores/class?${params}`, { credentials: 'include' });
+        if (!response.ok) throw new Error('Failed');
+        const result = await response.json();
+        currentStudents = result.data || [];
+
+        renderScoreTable(currentStudents);
+        updateScoreSummary(currentStudents);
+        restoreScoreDraft();
+        setScoreDirty(false);
+
+        document.getElementById('scoreTableContainer').classList.remove('hidden');
+        const className = document.getElementById('classSelect').selectedOptions[0].textContent;
+        const subjectName = document.getElementById('subjectSelect').selectedOptions[0].textContent;
+        document.getElementById('classInfo').textContent = `${className} • ${subjectName}`;
+        document.getElementById('scoreTypeInfo').textContent = `${currentConfig.scoreType} - HK${currentConfig.semester} (${currentConfig.academicYear})`;
+      } catch (error) {
+        window.showToast?.('Không thể tải bảng điểm', 'error');
+      }
+    }
+
+    function renderScoreTable(students) {
+      const tbody = document.getElementById('scoreList');
+      if (!students || students.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-text-muted">Không có học sinh trong lớp này</td></tr>`;
+        return;
+      }
+      const filtered = hideCompleted
+        ? students.filter((s) => !s.scores.some((sc) => sc.scoreType === currentConfig.scoreType))
+        : students;
+      if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-text-muted">Tất cả học sinh đã có điểm cho cấu hình này</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map((s, index) => {
+        const existingScore = s.scores.find((sc) => sc.scoreType === currentConfig.scoreType);
+        const scoreValue = existingScore?.score || '';
+        const noteValue = existingScore?.note || '';
+
+        return `
+        <tr data-student-id="${s._id}" class="hover:bg-gray-50 transition-colors group">
+          <td class="px-6 py-4 text-center text-text-muted font-mono text-sm">${index + 1}</td>
+          <td class="px-6 py-4 text-text-muted font-mono text-sm">${s.studentCode}</td>
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+              <div class="h-8 w-8 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center text-xs font-bold">
+                ${s.fullName.charAt(0).toUpperCase()}
+              </div>
+              <span class="font-semibold text-text-dark">${s.fullName}</span>
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <input type="number" min="0" max="10" step="0.5" 
+              class="score-input form-control w-full rounded-lg text-center font-mono font-bold text-primary-700 border-border focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all" 
+              data-field="score" value="${scoreValue}" placeholder="-" 
+              ${!userPermissions.canCreate && !userPermissions.canUpdate ? 'disabled readonly' : ''}>
+          </td>
+          <td class="px-6 py-4">
+            <input type="text" 
+              class="note-input form-control w-full rounded-lg text-sm border-transparent bg-transparent hover:bg-white hover:border-border focus:bg-white focus:border-primary-500 transition-all placeholder-gray-300" 
+              data-field="note" value="${noteValue}" placeholder="Thêm ghi chú..." 
+              ${!userPermissions.canCreate && !userPermissions.canUpdate ? 'disabled readonly' : ''}>
+          </td>
+        </tr>
+      `;
+      }).join('');
+      attachScoreListeners();
+    }
+
+    function clearAll() {
+      if (!confirm('Xóa tất cả điểm đã nhập trong bảng này?')) return;
+      document.querySelectorAll('.score-input').forEach((input) => (input.value = ''));
+      document.querySelectorAll('.note-input').forEach((input) => (input.value = ''));
+      handleScoreChange();
+    }
+
+    async function saveScores() {
+      try {
+        const { entries, invalidInputs } = collectScoreEntries();
+        if (invalidInputs.length) {
+          invalidInputs[0].focus();
+          window.showToast?.('Điểm phải nằm trong khoảng 0 - 10', 'error');
+          return;
+        }
+
+        if (!entries.length) {
+          window.showToast?.('Không có điểm nào để lưu', 'info');
+          return;
+        }
+
+        const response = await fetch('/api/v1/scores/enter', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ ...currentConfig, scoresData: entries }),
+        });
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error?.message || 'Không thể lưu điểm');
+        }
+
+        scoreLastSavedAt = new Date();
+        if (scoreDraftKey) localStorage.removeItem(scoreDraftKey);
+
+        updateScoreDraftInfo('');
+        setScoreDirty(false);
+
+        const result = await response.json();
+        window.showToast?.(`Đã lưu thành công ${result.data.entered} điểm`, 'success');
+
+        // Refresh to ensure consistency
+        setTimeout(() => loadScoreTable(), 1000);
+      } catch (error) {
+        window.showToast?.(error.message, 'error');
+      }
+    }
+
+    function attachScoreListeners() {
+      document.querySelectorAll('.score-input').forEach((input) => {
+        input.addEventListener('input', handleScoreChange);
+      });
+      document.querySelectorAll('.note-input').forEach((input) => {
+        input.addEventListener('input', handleScoreChange);
+      });
+    }
+
+    function handleScoreChange() {
+      const { entries, invalidInputs } = collectScoreEntries({ includeEmpty: true });
+
+      // Visual validation
+      invalidInputs.forEach((input) => input.classList.add('border-danger', 'text-danger'));
+      document.querySelectorAll('.score-input:not(.border-danger)').forEach(input => input.classList.remove('border-danger', 'text-danger'));
+
+      setScoreDirty(true);
+      updateScoreSummary(currentStudents);
+      persistScoreDraftDebounced(entries);
+    }
+
+    function collectScoreEntries(options = {}) {
+      const rows = document.querySelectorAll('#scoreList tr[data-student-id]');
+      const entries = [];
+      const invalidInputs = [];
+      rows.forEach((row) => {
+        const studentId = row.dataset.studentId;
+        const scoreInput = row.querySelector('.score-input');
+        const noteInput = row.querySelector('.note-input');
+        const value = scoreInput.value.trim();
+        const note = noteInput.value;
+
+        if (value === '') {
+          scoreInput.classList.remove('border-danger', 'text-danger');
+          if (options.includeEmpty) {
+            entries.push({ studentId, score: '', note });
+          }
+          return;
+        }
+
+        const numericValue = parseFloat(value);
+        if (Number.isNaN(numericValue) || numericValue < 0 || numericValue > 10) {
+          invalidInputs.push(scoreInput);
+          return;
+        }
+
+        entries.push({ studentId, score: numericValue, note });
+      });
+      return { entries, invalidInputs };
+    }
+
+    function updateScoreSummary(students) {
+      if (!scoreSummaryText) return;
+      if (!students.length) {
+        scoreSummaryText.textContent = 'Chưa có dữ liệu';
+        return;
+      }
+      const total = students.length;
+      // Count how many currently have valid scores in the DOM
+      const filled = Array.from(document.querySelectorAll('.score-input')).filter(input => {
+        const val = parseFloat(input.value);
+        return !isNaN(val) && val >= 0 && val <= 10;
+      }).length;
+
+      const missing = total - filled;
+      scoreSummaryText.innerHTML = `<span class="text-primary-600 font-bold">${filled}</span>/${total} đã nhập • <span class="text-text-muted">${missing} chưa nhập</span>`;
+    }
+
+    function getScoreDraftKey(config) {
+      if (!config.classId) return null;
+      return `${SCORE_DRAFT_PREFIX}${config.classId}:${config.subjectId}:${config.semester}:${config.scoreType}:${config.academicYear}`;
+    }
+
+    function persistScoreDraft(entries) {
+      if (!scoreDraftKey || !entries.length) return;
+      try {
+        localStorage.setItem(scoreDraftKey, JSON.stringify({ entries, updatedAt: Date.now() }));
+        updateScoreDraftInfo('Đã lưu nháp tự động');
+      } catch (error) {
+        console.warn('Draft save failed', error);
+      }
+    }
+
+    const persistScoreDraftDebounced = debounce((entries) => persistScoreDraft(entries), 1000);
+
+    function restoreScoreDraft() {
+      if (!scoreDraftKey) return;
+      try {
+        const raw = localStorage.getItem(scoreDraftKey);
+        if (!raw) {
+          updateScoreDraftInfo('');
+          return;
+        }
+        const draft = JSON.parse(raw);
+        if (Array.isArray(draft.entries)) {
+          draft.entries.forEach((entry) => {
+            const row = document.querySelector(`#scoreList tr[data-student-id="${entry.studentId}"]`);
+            if (!row) return;
+            const scoreInput = row.querySelector('.score-input');
+            const noteInput = row.querySelector('.note-input');
+            if (scoreInput && entry.score !== '') scoreInput.value = entry.score;
+            if (noteInput) noteInput.value = entry.note || '';
+          });
+          updateScoreDraftInfo(`Khôi phục nháp lúc ${new Date(draft.updatedAt).toLocaleTimeString('vi-VN')}`);
+          setScoreDirty(true);
+          updateScoreSummary(currentStudents);
+        }
+      } catch (error) {
+        console.warn('Draft restore failed', error);
+      }
+    }
+
+    function updateScoreDraftInfo(message) {
+      if (!scoreDraftInfo) return;
+      if (!message) {
+        scoreDraftInfo.classList.add('hidden');
+        scoreDraftInfo.textContent = '';
+        return;
+      }
+      scoreDraftInfo.textContent = message;
+      scoreDraftInfo.classList.remove('hidden');
+    }
+
+    function setScoreDirty(flag) {
+      scoreDirty = flag;
+      if (!scoreSaveStatus) return;
+      if (flag) {
+        scoreSaveStatus.innerHTML = '<span class="text-amber-500">● Chưa lưu</span>';
+        scoreSaveStatus.classList.remove('hidden');
+      } else if (scoreLastSavedAt) {
+        scoreSaveStatus.innerHTML = `<span class="text-green-600 flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg> Đã lưu ${scoreLastSavedAt.toLocaleTimeString('vi-VN')}</span>`;
+        scoreSaveStatus.classList.remove('hidden');
+      } else {
+        scoreSaveStatus.classList.add('hidden');
+      }
+    }
+
+    function debounce(fn, delay = 300) {
+      let timeout;
+      return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn.apply(null, args), delay);
+      };
+    }
+  </script>
+
+  <%- include('../partials/dashboard-layout-footer') %>

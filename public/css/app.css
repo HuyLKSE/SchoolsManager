@@ -1,0 +1,207 @@
+/* Aetherfield Design System - Global Styles */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap');
+
+:root {
+    /* Colors - Aetherfield Palette */
+    --color-bg-main: #ffffff;
+    --color-bg-secondary: #f9fafb;
+    /* Light Gray */
+    --color-bg-accent: #d9f99d;
+    /* Lime/Yellow from footer */
+
+    --color-text-primary: #111827;
+    /* Sharp Black */
+    --color-text-secondary: #4b5563;
+    /* Dark Gray */
+    --color-text-muted: #9ca3af;
+
+    --color-primary: #111827;
+    /* Black for buttons/actions */
+    --color-primary-hover: #000000;
+
+    --color-border: #e5e7eb;
+
+    /* Typography */
+    --font-serif: 'DM Serif Display', serif;
+    --font-sans: 'Inter', sans-serif;
+
+    /* Spacing */
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 2rem;
+    --spacing-xl: 4rem;
+
+    /* Radius */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 16px;
+    --radius-full: 9999px;
+}
+
+/* Reset & Base */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-sans);
+    background-color: var(--color-bg-main);
+    color: var(--color-text-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--font-serif);
+    color: var(--color-text-primary);
+    font-weight: 400;
+    /* Serif display fonts often look better at normal weight */
+    line-height: 1.1;
+    margin-bottom: var(--spacing-md);
+}
+
+h1 {
+    font-size: 3.5rem;
+    letter-spacing: -0.02em;
+}
+
+h2 {
+    font-size: 2.5rem;
+    letter-spacing: -0.01em;
+}
+
+h3 {
+    font-size: 2rem;
+}
+
+h4 {
+    font-size: 1.5rem;
+}
+
+p {
+    color: var(--color-text-secondary);
+    font-size: 1.125rem;
+    /* Slightly larger body text */
+}
+
+/* Components */
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: 0.95rem;
+    border-radius: var(--radius-sm);
+    /* Slightly squared off */
+    transition: all 0.2s ease;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background-color: var(--color-primary);
+    color: white;
+    border: 1px solid var(--color-primary);
+}
+
+.btn-primary:hover {
+    background-color: var(--color-primary-hover);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border);
+}
+
+.btn-secondary:hover {
+    border-color: var(--color-text-primary);
+    background-color: var(--color-bg-secondary);
+}
+
+/* Cards */
+.card {
+    background-color: white;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    transition: border-color 0.2s ease;
+}
+
+.card:hover {
+    border-color: #d1d5db;
+}
+
+/* Navbar */
+.nav-container {
+    background-color: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--color-border);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+/* Footer */
+.footer-aether {
+    background-color: var(--color-bg-accent);
+    color: var(--color-text-primary);
+    padding: var(--spacing-xl) 0;
+}
+
+.footer-logo {
+    font-family: var(--font-serif);
+    font-size: 5rem;
+    /* Massive footer logo like sample */
+    line-height: 1;
+    font-weight: 400;
+    letter-spacing: -0.03em;
+    text-transform: lowercase;
+    /* Or as per brand */
+}
+
+/* Utilities */
+.text-serif {
+    font-family: var(--font-serif);
+}
+
+.text-sans {
+    font-family: var(--font-sans);
+}
+
+.bg-cream {
+    background-color: #fdfbf7;
+}
+
+.bg-lime {
+    background-color: var(--color-bg-accent);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 2.5rem;
+    }
+
+    h2 {
+        font-size: 2rem;
+    }
+
+    .footer-logo {
+        font-size: 3rem;
+    }
+}

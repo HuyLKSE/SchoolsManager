@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SchoolM - Giải pháp giáo dục toàn diện</title>
+  <link rel="stylesheet" href="/css/style.css"> <!-- Tailwind -->
+  <link rel="stylesheet" href="/css/app.css"> <!-- Aetherfield Global -->
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+</head>
+
+<body class="bg-gradient-to-br from-blue-50 via-white to-blue-50 text-gray-900 font-sans min-h-screen">
+
+  <!-- Navbar -->
+  <nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 transition-all duration-300"
+    id="navbar">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-20">
+        <a href="/" class="flex items-center gap-2 group">
+          <div
+            class="w-10 h-10 bg-black rounded-full flex items-center justify-center text-white font-serif font-bold text-xl group-hover:scale-110 transition-transform">
+            S</div>
+          <span class="text-2xl font-serif font-bold tracking-tight">SchoolM</span>
+        </a>
+
+        <div class="hidden md:flex gap-8 text-sm font-medium text-gray-600">
+          <a href="#features" class="hover:text-black transition-colors py-2">Tính năng</a>
+          <a href="#solutions" class="hover:text-black transition-colors py-2">Giải pháp</a>
+          <a href="#pricing" class="hover:text-black transition-colors py-2">Bảng giá</a>
+          <a href="#contact" class="hover:text-black transition-colors py-2">Liên hệ</a>
+        </div>
+
+        <div class="flex gap-4">
+          <a href="/login" class="btn btn-secondary py-2.5 px-5 text-sm font-medium">Đăng nhập</a>
+          <a href="/register"
+            class="btn btn-primary py-2.5 px-5 text-sm font-medium shadow-lg shadow-black/20 hover:shadow-xl hover:-translate-y-0.5 transition-all">Dùng
+            thử</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="pt-32 pb-20 lg:pt-40 lg:pb-32 relative overflow-hidden">
+    <!-- Decorative Blobs -->
+    <div class="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+      <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-200/30 rounded-full blur-3xl animate-blob">
+      </div>
+      <div
+        class="absolute top-[20%] right-[-10%] w-[30%] h-[30%] bg-lime-200/30 rounded-full blur-3xl animate-blob animation-delay-2000">
+      </div>
+      <div
+        class="absolute bottom-[-10%] left-[20%] w-[30%] h-[30%] bg-purple-200/30 rounded-full blur-3xl animate-blob animation-delay-4000">
+      </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 text-center relative z-10">
+      <div data-aos="fade-up">
+        <span
+          class="inline-block py-1 px-3 rounded-full bg-white/80 backdrop-blur-sm text-blue-600 text-xs font-bold tracking-wider mb-6 border border-blue-100 shadow-sm">PHIÊN
+          BẢN 2.0 ĐÃ RA MẮT</span>
+        <h1 class="text-5xl md:text-7xl lg:text-8xl mb-8 font-serif leading-[1.1] tracking-tight text-gray-900">
+          Quản lý giáo dục <br>
+          <span class="italic text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">thông minh
+            hơn.</span>
+        </h1>
+        <p class="text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+          Nền tảng SchoolM giúp tự động hóa quy trình quản lý, kết nối nhà trường - phụ huynh và nâng cao chất lượng đào
+          tạo với AI.
+        </p>
+        <div class="flex flex-col sm:flex-row justify-center gap-4 mb-20">
+          <a href="/register"
+            class="btn btn-primary bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg shadow-xl shadow-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/40 hover:-translate-y-1 transition-all border-none">Bắt
+            đầu miễn phí</a>
+          <a href="#features"
+            class="btn btn-secondary bg-white/80 backdrop-blur-sm hover:bg-white px-8 py-4 text-lg hover:-translate-y-1 transition-all">Tìm
+            hiểu thêm</a>
+        </div>
+      </div>
+
+      <!-- Real Dashboard Screenshot -->
+      <div class="relative max-w-5xl mx-auto" data-aos="fade-up" data-aos-delay="200">
+        <div class="absolute -inset-1 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-2xl blur opacity-30"></div>
+        <div class="relative bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden">
+          <!-- Browser Bar -->
+          <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex items-center gap-2">
+            <div class="flex gap-2">
+              <div class="w-3 h-3 rounded-full bg-red-400"></div>
+              <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+              <div class="w-3 h-3 rounded-full bg-green-400"></div>
+            </div>
+            <div
+              class="mx-auto bg-white border border-gray-200 rounded-md px-3 py-1 text-xs text-gray-400 flex items-center gap-2 w-64 justify-center">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                </path>
+              </svg>
+              schoolm.edu.vn/dashboard
+            </div>
+          </div>
+          <!-- Dashboard Screenshot -->
+          <img src="/images/landing/hero-dashboard.png" alt="SchoolM Dashboard Interface" class="w-full h-auto">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section 1 -->
+  <section id="features" class="py-24 relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="grid md:grid-cols-2 gap-20 items-center">
+        <div data-aos="fade-right">
+          <div class="relative">
+            <div
+              class="aspect-square bg-white/50 backdrop-blur-xl rounded-3xl overflow-hidden relative shadow-2xl border border-white/50">
+              <!-- Abstract UI Element -->
+              <div
+                class="absolute inset-4 bg-white/80 rounded-2xl shadow-inner p-6 flex flex-col justify-between backdrop-blur-sm">
+                <div class="flex justify-between items-center">
+                  <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
+                  </div>
+                  <span class="text-green-500 font-bold bg-green-50 px-2 py-1 rounded text-sm">+24.5%</span>
+                </div>
+                <div>
+                  <div class="text-4xl font-serif font-bold mb-1">98.5%</div>
+                  <div class="text-gray-500 text-sm">Tỷ lệ chuyên cần</div>
+                </div>
+                <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div class="h-full bg-blue-600 w-[98.5%]"></div>
+                </div>
+              </div>
+            </div>
+            <!-- Floating Badge -->
+            <div
+              class="absolute -bottom-6 -right-6 bg-white p-4 rounded-xl shadow-xl border border-gray-100 animate-bounce"
+              style="animation-duration: 3s;">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">🤖</div>
+                <div>
+                  <div class="text-xs text-gray-500">AI Assistant</div>
+                  <div class="font-bold text-sm">Đã tạo báo cáo</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div data-aos="fade-left">
+          <h2 class="text-4xl md:text-5xl mb-8 font-serif">Mọi công cụ bạn cần để <br> <span
+              class="italic text-gray-400">quản lý & phát triển</span></h2>
+          <div class="space-y-10">
+            <div class="flex gap-6 group">
+              <div
+                class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform shadow-lg shadow-blue-500/30">
+                1</div>
+              <div>
+                <h3 class="text-xl font-serif mb-2 group-hover:text-blue-600 transition-colors">Quản lý Học sinh & Lớp
+                  học</h3>
+                <p class="text-gray-600 leading-relaxed">Theo dõi hồ sơ, điểm số và quá trình học tập chi tiết. Sắp xếp
+                  thời khóa biểu thông minh.</p>
+              </div>
+            </div>
+            <div class="flex gap-6 group">
+              <div
+                class="w-12 h-12 bg-white text-blue-600 border border-blue-100 rounded-full flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors shadow-sm">
+                2</div>
+              <div>
+                <h3 class="text-xl font-serif mb-2 group-hover:text-blue-600 transition-colors">Tài chính & Học phí</h3>
+                <p class="text-gray-600 leading-relaxed">Tự động hóa quy trình thu chi, nhắc nợ tự động và xuất báo cáo
+                  tài chính minh bạch.</p>
+              </div>
+            </div>
+            <div class="flex gap-6 group">
+              <div
+                class="w-12 h-12 bg-white text-blue-600 border border-blue-100 rounded-full flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors shadow-sm">
+                3</div>
+              <div>
+                <h3 class="text-xl font-serif mb-2 group-hover:text-blue-600 transition-colors">English Learning AI</h3>
+                <p class="text-gray-600 leading-relaxed">Tích hợp module học tiếng Anh với AI trợ giảng, chấm điểm phát
+                  âm và gợi ý lộ trình.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Solutions Grid -->
+  <section id="solutions" class="py-24 bg-white/50 backdrop-blur-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-20">
+        <h2 class="text-4xl md:text-5xl mb-4 font-serif">Thiết kế minh bạch. <br> <span class="italic text-gray-500">Tối
+            ưu hóa hành động.</span></h2>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8">
+        <!-- Card 1 -->
+        <div
+          class="bg-white p-10 rounded-2xl border border-gray-100 hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 group"
+          data-aos="fade-up" data-aos-delay="0">
+          <div
+            class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+              </path>
+            </svg>
+          </div>
+          <h3 class="text-2xl font-serif mb-4">Báo cáo Tự động</h3>
+          <p class="text-gray-600 leading-relaxed">Hệ thống tự động tổng hợp số liệu và xuất báo cáo định kỳ, giúp tiết
+            kiệm 80% thời gian quản lý.</p>
+        </div>
+
+        <!-- Card 2 -->
+        <div
+          class="bg-white p-10 rounded-2xl border border-gray-100 hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 group"
+          data-aos="fade-up" data-aos-delay="100">
+          <div
+            class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4">
+              </path>
+            </svg>
+          </div>
+          <h3 class="text-2xl font-serif mb-4">Tùy biến Linh hoạt</h3>
+          <p class="text-gray-600 leading-relaxed">Dễ dàng điều chỉnh cấu trúc lớp học, môn học và thang điểm phù hợp
+            với mô hình của từng trường.</p>
+        </div>
+
+        <!-- Card 3 -->
+        <div
+          class="bg-white p-10 rounded-2xl border border-gray-100 hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 group"
+          data-aos="fade-up" data-aos-delay="200">
+          <div
+            class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z">
+              </path>
+            </svg>
+          </div>
+          <h3 class="text-2xl font-serif mb-4">Tốc độ Vượt trội</h3>
+          <p class="text-gray-600 leading-relaxed">Nền tảng được tối ưu hóa cho trải nghiệm mượt mà ngay cả với dữ liệu
+            lớn hàng nghìn học sinh.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section id="pricing" class="py-24 relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl md:text-5xl mb-4 font-serif">Bảng giá đơn giản</h2>
+        <p class="text-gray-600">Chọn gói phù hợp với quy mô trường học của bạn.</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8">
+        <!-- Basic -->
+        <div
+          class="p-8 rounded-3xl bg-white/80 backdrop-blur-sm border border-gray-200 hover:border-blue-300 transition-colors shadow-sm">
+          <h3 class="text-xl font-bold mb-2">Cơ bản</h3>
+          <div class="text-4xl font-serif mb-6">Miễn phí</div>
+          <p class="text-gray-600 text-sm mb-8">Dành cho lớp học nhỏ hoặc giáo viên độc lập.</p>
+          <ul class="space-y-4 mb-8 text-sm">
+            <li class="flex gap-2"><span class="text-green-500">✓</span> Tối đa 50 học sinh</li>
+            <li class="flex gap-2"><span class="text-green-500">✓</span> Quản lý điểm số cơ bản</li>
+            <li class="flex gap-2"><span class="text-green-500">✓</span> Báo cáo PDF</li>
+          </ul>
+          <a href="/register" class="btn btn-secondary w-full py-3">Bắt đầu ngay</a>
+        </div>
+
+        <!-- Pro (Featured) -->
+        <div
+          class="p-8 rounded-3xl bg-blue-600 text-white shadow-2xl shadow-blue-500/30 transform md:-translate-y-4 relative border border-blue-500">
+          <div
+            class="absolute top-0 right-0 bg-white text-blue-600 text-xs font-bold px-3 py-1 rounded-bl-xl rounded-tr-2xl">
+            PHỔ BIẾN</div>
+          <h3 class="text-xl font-bold mb-2">Tiêu chuẩn</h3>
+          <div class="text-4xl font-serif mb-6">499k <span class="text-sm font-sans text-blue-200">/tháng</span></div>
+          <p class="text-blue-100 text-sm mb-8">Dành cho trường học vừa và nhỏ.</p>
+          <ul class="space-y-4 mb-8 text-sm">
+            <li class="flex gap-2"><span class="text-blue-200">✓</span> Không giới hạn học sinh</li>
+            <li class="flex gap-2"><span class="text-blue-200">✓</span> Quản lý học phí & công nợ</li>
+            <li class="flex gap-2"><span class="text-blue-200">✓</span> English AI Module (Basic)</li>
+            <li class="flex gap-2"><span class="text-blue-200">✓</span> Hỗ trợ 24/7</li>
+          </ul>
+          <a href="/register"
+            class="btn bg-white text-blue-600 w-full py-3 hover:bg-blue-50 border-none font-bold shadow-lg">Dùng thử 14
+            ngày</a>
+        </div>
+
+        <!-- Enterprise -->
+        <div
+          class="p-8 rounded-3xl bg-white/80 backdrop-blur-sm border border-gray-200 hover:border-blue-300 transition-colors shadow-sm">
+          <h3 class="text-xl font-bold mb-2">Cao cấp</h3>
+          <div class="text-4xl font-serif mb-6">Liên hệ</div>
+          <p class="text-gray-600 text-sm mb-8">Dành cho hệ thống trường học lớn.</p>
+          <ul class="space-y-4 mb-8 text-sm">
+            <li class="flex gap-2"><span class="text-green-500">✓</span> Tùy chỉnh tên miền</li>
+            <li class="flex gap-2"><span class="text-green-500">✓</span> API Integration</li>
+            <li class="flex gap-2"><span class="text-green-500">✓</span> English AI Advanced</li>
+            <li class="flex gap-2"><span class="text-green-500">✓</span> Dedicated Support</li>
+          </ul>
+          <a href="#contact" class="btn btn-secondary w-full py-3">Liên hệ tư vấn</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer id="contact" class="bg-white pt-24 pb-12 border-t border-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid md:grid-cols-2 gap-12 mb-24">
+        <div>
+          <h2 class="text-4xl md:text-5xl font-serif mb-8 text-gray-900">Sẵn sàng tối ưu hóa <br> trường học của bạn?
+          </h2>
+          <a href="/register"
+            class="btn bg-blue-600 text-white px-8 py-4 text-lg hover:bg-blue-700 shadow-lg shadow-blue-500/30 hover:-translate-y-1 transition-all">Đăng
+            ký dùng thử miễn phí</a>
+        </div>
+        <div class="grid grid-cols-2 gap-8 text-sm">
+          <div>
+            <h4 class="font-bold mb-6 uppercase tracking-wider text-xs text-gray-500">Sản phẩm</h4>
+            <ul class="space-y-3">
+              <li><a href="#features" class="hover:text-blue-600 hover:underline transition-colors">Tính năng</a></li>
+              <li><a href="#pricing" class="hover:text-blue-600 hover:underline transition-colors">Bảng giá</a></li>
+              <li><a href="#" class="hover:text-blue-600 hover:underline transition-colors">English AI</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="font-bold mb-6 uppercase tracking-wider text-xs text-gray-500">Công ty</h4>
+            <ul class="space-y-3">
+              <li><a href="#" class="hover:text-blue-600 hover:underline transition-colors">Về chúng tôi</a></li>
+              <li><a href="#" class="hover:text-blue-600 hover:underline transition-colors">Liên hệ</a></li>
+              <li><a href="#" class="hover:text-blue-600 hover:underline transition-colors">Blog</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="border-t border-gray-100 pt-12">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
+          <div class="flex items-center gap-2">
+            <span class="font-serif font-bold text-lg text-gray-900">SchoolM</span>
+            <span>&copy; 2025</span>
+          </div>
+          <div class="flex gap-6">
+            <a href="#" class="hover:text-blue-600 transition-colors">Điều khoản</a>
+            <a href="#" class="hover:text-blue-600 transition-colors">Bảo mật</a>
+            <a href="#" class="hover:text-blue-600 transition-colors">Cookies</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    AOS.init({
+      duration: 800,
+      once: true,
+      offset: 50
+    });
+
+    // Navbar Scroll Effect
+    window.addEventListener('scroll', () => {
+      const navbar = document.getElementById('navbar');
+      if (window.scrollY > 50) {
+        navbar.classList.add('shadow-sm', 'bg-white/90');
+        navbar.classList.remove('bg-white/80');
+      } else {
+        navbar.classList.remove('shadow-sm', 'bg-white/90');
+        navbar.classList.add('bg-white/80');
+      }
+    });
+  </script>
+</body>
+
+</html>

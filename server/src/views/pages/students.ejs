@@ -1,0 +1,409 @@
+<%- include('../partials/dashboard-layout-header', { title: 'Danh sách học sinh' }) %>
+
+  <div class="space-y-6">
+    <!-- Header Section -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold font-serif text-gray-900">Học sinh</h1>
+        <p class="text-gray-500 mt-1">Quản lý hồ sơ học sinh toàn trường</p>
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <button onclick="exportToExcel()"
+          class="btn bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 flex items-center gap-2 shadow-sm transition-all">
+          <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span>Xuất Excel</span>
+        </button>
+
+        <% if (user && user.hasPermission && user.hasPermission('canCreate')) { %>
+          <button onclick="document.getElementById('importExcel').click()"
+            class="btn bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 flex items-center gap-2 shadow-sm transition-all">
+            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+            <span>Nhập Excel</span>
+          </button>
+          <input type="file" id="importExcel" accept=".xlsx,.xls" style="display:none"
+            onchange="importFromExcel(event)">
+
+          <a href="/students/create"
+            class="btn bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-2 shadow-md border border-blue-700 transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Thêm học sinh</span>
+          </a>
+          <% } %>
+      </div>
+    </div>
+
+    <!-- Filter Section - Squared Modern -->
+    <div class="bg-white border border-gray-200 border-l-4 border-l-blue-600 p-5 shadow-sm">
+      <form id="filterForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="h-5 w-5 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input type="text" name="search" placeholder="Tìm tên hoặc mã HS..."
+            class="pl-10 form-control w-full rounded-xl border-gray-200 bg-gray-50 focus:bg-white transition-colors text-gray-900 placeholder-gray-400">
+        </div>
+
+        <div class="relative">
+          <select name="classId"
+            class="form-control w-full rounded-xl border-gray-200 bg-gray-50 focus:bg-white transition-colors appearance-none text-gray-900">
+            <option value="">Tất cả lớp</option>
+          </select>
+          <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-text-muted">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
+
+        <div class="relative">
+          <select name="status"
+            class="form-control w-full rounded-xl border-gray-200 bg-gray-50 focus:bg-white transition-colors appearance-none text-gray-900">
+            <option value="">Tất cả trạng thái</option>
+            <option value="Đang học">Đang học</option>
+            <option value="Nghỉ học">Nghỉ học</option>
+            <option value="Chuyển trường">Chuyển trường</option>
+            <option value="Tốt nghiệp">Tốt nghiệp</option>
+          </select>
+          <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-text-muted">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
+
+        <button type="submit"
+          class="btn bg-blue-600 text-white hover:bg-blue-700 justify-center shadow-md border border-blue-700 transition-all">Áp
+          dụng bộ lọc</button>
+      </form>
+    </div>
+
+    <!-- Table Section - Squared Modern -->
+    <div class="bg-white border border-gray-200 shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-gray-50 border-b-2 border-gray-300 text-xs font-bold text-gray-700 uppercase tracking-wider">
+              <th class="px-6 py-4">Mã HS</th>
+              <th class="px-6 py-4">Họ tên</th>
+              <th class="px-6 py-4">Ngày sinh</th>
+              <th class="px-6 py-4">Giới tính</th>
+              <th class="px-6 py-4">Lớp</th>
+              <th class="px-6 py-4">Trạng thái</th>
+              <th class="px-6 py-4 text-right">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="studentList" class="divide-y divide-border">
+            <tr>
+              <td colspan="7" class="px-6 py-12 text-center text-text-muted">
+                <div class="flex flex-col items-center justify-center">
+                  <svg class="w-10 h-10 mb-3 text-primary-500 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                    </path>
+                  </svg>
+                  <p>Đang tải dữ liệu...</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div id="pagination" class="flex items-center justify-center gap-2 p-4 border-t border-gray-200 bg-gray-50">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const userPermissions = {
+      canCreate: <%= user && user.hasPermission && user.hasPermission('canCreate') ? 'true' : 'false' %>,
+      canUpdate: <%= user && user.hasPermission && user.hasPermission('canUpdate') ? 'true' : 'false' %>,
+        canDelete: <%= user && user.hasPermission && user.hasPermission('canDelete') ? 'true' : 'false' %>,
+    };
+
+    let currentPage = 1;
+    const limit = 20;
+
+    document.getElementById('filterForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      loadStudents(1, getFilters());
+    });
+
+    loadStudents();
+    loadClassesFilter();
+
+    async function loadStudents(page = 1, filters = {}) {
+      currentPage = page;
+      try {
+        const params = new URLSearchParams({ page, limit, ...filters });
+        const response = await fetch(`/api/v1/students?${params}`, { credentials: 'include' });
+        if (!response.ok) throw new Error('Failed to load students');
+        const result = await response.json();
+        renderStudents(result.data);
+        renderPagination(result.meta);
+      } catch (error) {
+        document.getElementById('studentList').innerHTML = `
+        <tr>
+          <td colspan="7" class="px-6 py-12 text-center text-red-400">
+            <p>Không thể tải dữ liệu. Vui lòng thử lại sau.</p>
+          </td>
+        </tr>`;
+      }
+    }
+
+    function renderStudents(students) {
+      const tbody = document.getElementById('studentList');
+      if (!students || students.length === 0) {
+        tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="px-6 py-12 text-center text-text-muted">
+            <div class="flex flex-col items-center justify-center">
+              <svg class="w-12 h-12 mb-3 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+              <p>Không tìm thấy học sinh nào.</p>
+            </div>
+          </td>
+        </tr>`;
+        return;
+      }
+
+      tbody.innerHTML = students.map(s => {
+        const statusStyles = {
+          'Đang học': 'bg-green-500/10 text-green-400 border-green-500/20',
+          'Nghỉ học': 'bg-red-500/10 text-red-400 border-red-500/20',
+          'Chuyển trường': 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+          'Tốt nghiệp': 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+        };
+        const statusClass = statusStyles[s.status] || 'bg-gray-500/10 text-gray-400 border-gray-500/20';
+
+        const dob = s.dateOfBirth ? new Date(s.dateOfBirth).toLocaleDateString('vi-VN') : '--';
+        const className = s.classId?.className || 'Chưa phân lớp';
+
+        return `
+        <tr class="hover:bg-gray-50 transition-colors group">
+          <td class="px-6 py-4 text-sm font-mono text-text-muted">${s.studentCode || '--'}</td>
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+              <div class="h-8 w-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">
+                ${s.fullName.charAt(0).toUpperCase()}
+              </div>
+              <span class="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">${s.fullName}</span>
+            </div>
+          </td>
+          <td class="px-6 py-4 text-sm text-text-muted">${dob}</td>
+          <td class="px-6 py-4 text-sm text-text-muted">${s.gender || '--'}</td>
+          <td class="px-6 py-4 text-sm font-medium text-gray-900">${className}</td>
+          <td class="px-6 py-4">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusClass}">
+              ${s.status || '---'}
+            </span>
+          </td>
+          <td class="px-6 py-4 text-right">
+            <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <a href="/students/${s._id}" class="p-1.5 rounded-lg text-text-muted hover:bg-primary-500/10 hover:text-primary-400 transition-colors" title="Xem chi tiết">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+              </a>
+              ${userPermissions.canUpdate ? `
+                <a href="/students/${s._id}/edit" class="p-1.5 rounded-lg text-text-muted hover:bg-amber-500/10 hover:text-amber-400 transition-colors" title="Sửa">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                </a>
+              ` : ''}
+              ${userPermissions.canDelete ? `
+                <button onclick="deleteStudent('${s._id}')" class="p-1.5 rounded-lg text-text-muted hover:bg-red-500/10 hover:text-red-400 transition-colors" title="Xóa">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </button>
+              ` : ''}
+            </div>
+          </td>
+        </tr>
+      `;
+      }).join('');
+    }
+
+    function renderPagination(meta) {
+      const pagination = document.getElementById('pagination');
+      if (!meta) return;
+      const totalPages = Math.ceil(meta.total / meta.limit);
+      if (totalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+      }
+
+      let html = '';
+
+      // Previous Button
+      html += `
+      <button 
+        ${meta.page === 1 ? 'disabled' : ''} 
+        onclick="loadStudents(${meta.page - 1}, getFilters())"
+        class="p-2 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+      </button>
+    `;
+
+      // Page Numbers
+      for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || Math.abs(i - meta.page) <= 1) {
+          const activeClass = i === meta.page
+            ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/30'
+            : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50 hover:text-blue-600';
+
+          html += `
+          <button 
+            onclick="loadStudents(${i}, getFilters())"
+            class="min-w-[40px] h-10 rounded-lg border text-sm font-medium transition-colors ${activeClass}"
+          >
+            ${i}
+          </button>
+        `;
+        } else if (Math.abs(i - meta.page) === 2) {
+          html += '<span class="px-2 text-text-muted">...</span>';
+        }
+      }
+
+      // Next Button
+      html += `
+      <button 
+        ${!meta.hasNext ? 'disabled' : ''} 
+        onclick="loadStudents(${meta.page + 1}, getFilters())"
+        class="p-2 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+      </button>
+    `;
+
+      pagination.innerHTML = html;
+    }
+
+    function getFilters() {
+      const form = document.getElementById('filterForm');
+      const formData = new FormData(form);
+      const filters = {};
+      for (let [key, value] of formData.entries()) {
+        if (value) filters[key] = value;
+      }
+      return filters;
+    }
+
+    async function loadClassesFilter() {
+      try {
+        const response = await fetch('/api/v1/classes?limit=100', { credentials: 'include' });
+        if (!response.ok) return;
+        const result = await response.json();
+        const select = document.querySelector('select[name="classId"]');
+        result.data.forEach(c => {
+          const option = document.createElement('option');
+          option.value = c._id;
+          option.textContent = c.className;
+          select.appendChild(option);
+        });
+      } catch (error) {
+        console.warn('Không thể tải danh sách lớp');
+      }
+    }
+
+    async function deleteStudent(id) {
+      if (!confirm('Bạn có chắc chắn muốn xóa học sinh này?')) return;
+
+      try {
+        const response = await fetch(`/api/v1/students/${id}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+
+        if (!response.ok) throw new Error('Không thể xóa học sinh');
+
+        window.showToast?.('Xóa học sinh thành công', 'success');
+        loadStudents(currentPage, getFilters());
+      } catch (error) {
+        window.showToast?.('Lỗi: ' + error.message, 'error');
+      }
+    }
+
+    async function exportToExcel() {
+      try {
+        const filters = getFilters();
+        const params = new URLSearchParams({ ...filters, limit: 10000 });
+        const response = await fetch(`/api/v1/students?${params}`, { credentials: 'include' });
+        if (!response.ok) throw new Error('Không thể tải dữ liệu');
+
+        const result = await response.json();
+        const students = result.data;
+
+        if (students.length === 0) {
+          window.showToast?.('Không có dữ liệu để xuất', 'info');
+          return;
+        }
+
+        const headers = ['Mã HS', 'Họ tên', 'Ngày sinh', 'Giới tính', 'Địa chỉ', 'Lớp', 'Trạng thái'];
+        const rows = students.map(s => [
+          s.studentCode || '',
+          s.fullName || '',
+          s.dateOfBirth ? new Date(s.dateOfBirth).toLocaleDateString('vi-VN') : '',
+          s.gender || '',
+          s.address || '',
+          s.classId?.className || 'Chưa phân lớp',
+          s.status || ''
+        ]);
+
+        const csvContent = [
+          '\uFEFF' + headers.join(','),
+          ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `danh-sach-hoc-sinh-${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+
+        window.showToast?.(`Đã xuất ${students.length} học sinh`, 'success');
+      } catch (error) {
+        window.showToast?.('Lỗi khi xuất Excel: ' + error.message, 'error');
+      }
+    }
+
+    async function importFromExcel(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      event.target.value = '';
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const response = await fetch('/api/v1/students/import', {
+          method: 'POST',
+          credentials: 'include',
+          body: formData
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Không thể import file');
+        }
+
+        const result = await response.json();
+        window.showToast?.(`Import thành công ${result.imported || 0} học sinh`, 'success');
+        loadStudents(1, getFilters());
+      } catch (error) {
+        window.showToast?.('Lỗi khi import: ' + error.message, 'error');
+      }
+    }
+  </script>
+
+  <%- include('../partials/dashboard-layout-footer') %>

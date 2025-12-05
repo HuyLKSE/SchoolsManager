@@ -1,0 +1,192 @@
+<%
+  const can = (perm) => {
+    if (typeof user.hasPermission === 'function') {
+      return user.hasPermission(perm);
+    }
+    return !!(user.permissions && user.permissions[perm]);
+  };
+  const quickActions = [];
+  if (user.role === 'teacher') {
+    quickActions.push({
+      label: 'Lớp phụ trách',
+      description: 'Theo dõi sĩ số và lịch giảng dạy',
+      href: '/app/classes'
+    });
+  }
+  if (user.role === 'student') {
+    quickActions.push(
+      { label: 'Hồ sơ học sinh', description: 'Tra cứu thông tin cá nhân', href: '/app/profile' },
+      { label: 'Điểm số', description: 'Xem kết quả mới nhất', href: '/app/scores' },
+      { label: 'Điểm danh', description: 'Theo dõi chuyên cần', href: '/app/attendance' }
+    );
+  }
+  if (user.role === 'parent') {
+    quickActions.push({
+      label: 'Con em',
+      description: 'Theo dõi tiến độ của con',
+      href: '/app/children'
+    });
+  }
+  if (can('canCreate')) {
+    quickActions.push({
+      label: 'Tạo học sinh mới',
+      description: 'Thêm hồ sơ vào hệ thống',
+      href: '/students/create'
+    });
+  }
+  if (can('canViewAll')) {
+    quickActions.push({
+      label: 'Danh sách học sinh',
+      description: 'Xem và lọc toàn trường',
+      href: '/students'
+    });
+  }
+  if (can('canManageUsers')) {
+    quickActions.push({
+      label: 'Quản lý người dùng',
+      description: 'Phân quyền và khóa tài khoản',
+      href: '/admin/users'
+    });
+  }
+%>
+<%- include('../../partials/app-header', { user, currentPage: 'home', title: 'Trang chủ' }) %>
+
+<section class="space-y-6">
+  <div class="card flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div>
+      <p class="text-sm text-text-muted uppercase tracking-wide">Chào mừng</p>
+      <h1 class="text-2xl font-semibold mt-1">
+        <%= user.fullName || user.username %>
+      </h1>
+      <p class="text-sm text-text-muted mt-2">
+        <% if (user.role === 'teacher') { %>
+          Bạn đang quản lý lớp học và kế hoạch giảng dạy trong tuần này.
+        <% } else if (user.role === 'student') { %>
+          Theo dõi kết quả học tập, điểm danh và thông tin cá nhân tại đây.
+        <% } else if (user.role === 'parent') { %>
+          Giám sát tiến độ học tập của con và nhận thông báo quan trọng.
+        <% } else { %>
+          Theo dõi hoạt động của trường và các phê duyệt quan trọng.
+        <% } %>
+      </p>
+    </div>
+    <div class="text-sm text-text-muted">
+      <p>Đăng nhập gần nhất</p>
+      <strong><%= user.lastLogin ? new Date(user.lastLogin).toLocaleString('vi-VN') : '---' %></strong>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+      <div>
+        <p class="text-sm text-text-muted uppercase tracking-wide">Truy cập nhanh</p>
+        <h2 class="text-lg font-semibold">Các tác vụ dành cho bạn</h2>
+      </div>
+      <span class="text-sm text-text-muted">
+        <%= quickActions.length %> hành động hiển thị dựa trên quyền được cấp
+      </span>
+    </div>
+    <% if (quickActions.length === 0) { %>
+      <p class="text-sm text-text-muted">Chưa có hành động nào. Bạn đang ở chế độ xem dữ liệu.</p>
+    <% } else { %>
+      <div class="grid gap-3 md:grid-cols-2">
+        <% quickActions.forEach(action => { %>
+          <a href="<%= action.href %>" class="card border-dashed hover:border-primary transition-colors duration-150">
+            <p class="text-sm font-semibold text-primary tracking-wide uppercase"><%= action.label %></p>
+            <p class="text-text-muted text-sm mt-1"><%= action.description %></p>
+          </a>
+        <% }); %>
+      </div>
+    <% } %>
+  </div>
+
+  <% if (user.role === 'teacher' && overview && overview.managedClasses) { %>
+    <div class="grid gap-3 md:grid-cols-3">
+      <div class="card border-l-4 border-primary">
+        <p class="text-sm text-text-muted uppercase tracking-wide">Lớp phụ trách</p>
+        <p class="text-3xl font-semibold mt-2"><%= overview.managedClasses %></p>
+      </div>
+      <div class="card border-l-4 border-secondary">
+        <p class="text-sm text-text-muted uppercase tracking-wide">Hoạt động hôm nay</p>
+        <p class="text-3xl font-semibold mt-2">--</p>
+        <p class="text-xs text-text-muted">Đang cập nhật</p>
+      </div>
+      <div class="card border-l-4 border-accent">
+        <p class="text-sm text-text-muted uppercase tracking-wide">Thông báo chờ duyệt</p>
+        <p class="text-3xl font-semibold mt-2">0</p>
+      </div>
+    </div>
+  <% } %>
+
+  <% if (user.role === 'student') { %>
+    <div class="grid gap-4 md:grid-cols-2">
+      <div class="card space-y-3">
+        <div>
+          <p class="text-sm text-text-muted uppercase tracking-wide">Thông tin cá nhân</p>
+          <h2 class="text-lg font-semibold">Hồ sơ học sinh</h2>
+        </div>
+        <% if (overview.student) { %>
+          <dl class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <dt class="text-text-muted">Mã học sinh</dt>
+              <dd class="font-semibold"><%= overview.student.studentCode || '--' %></dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-text-muted">Họ và tên</dt>
+              <dd class="font-semibold"><%= overview.student.fullName %></dd>
+            </div>
+            <% if (overview.student.class) { %>
+              <div class="flex justify-between">
+                <dt class="text-text-muted">Lớp</dt>
+                <dd class="font-semibold"><%= overview.student.class.className %> (<%= overview.student.class.classCode %>)</dd>
+              </div>
+            <% } %>
+          </dl>
+          <a href="/app/profile" class="text-sm font-semibold text-primary hover:underline">Chi tiết hồ sơ</a>
+        <% } else { %>
+          <p class="text-sm text-text-muted">Tài khoản chưa được liên kết với hồ sơ học sinh.</p>
+        <% } %>
+      </div>
+      <div class="card">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <p class="text-sm text-text-muted uppercase tracking-wide">Điểm số</p>
+            <h2 class="text-lg font-semibold">Điểm gần đây</h2>
+          </div>
+          <a href="/app/scores" class="text-sm font-semibold text-primary hover:underline">Xem tất cả</a>
+        </div>
+        <% if (overview.recentScores && overview.recentScores.length > 0) { %>
+          <ul class="space-y-2 text-sm">
+            <% overview.recentScores.slice(0, 5).forEach(score => { %>
+              <li class="flex items-center justify-between border-b border-border py-2">
+                <span><%= score.subjectId?.subjectName || 'N/A' %></span>
+                <% const value = score.finalScore ? score.finalScore.toFixed(1) : '--'; %>
+                <span class="font-semibold <%= score.finalScore >= 8 ? 'text-success' : score.finalScore >= 5 ? 'text-warning' : 'text-danger' %>"><%= value %></span>
+              </li>
+            <% }); %>
+          </ul>
+        <% } else { %>
+          <p class="text-sm text-text-muted">Chưa có điểm số nào được ghi nhận.</p>
+        <% } %>
+      </div>
+    </div>
+  <% } %>
+
+  <div class="card">
+    <div class="flex items-start gap-3">
+      <div class="p-2 rounded-lg bg-primary-soft text-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <div>
+        <h3 class="text-lg font-semibold mb-1">Cần hỗ trợ?</h3>
+        <p class="text-sm text-text-muted">
+          Liên hệ quản trị viên hoặc giáo viên chủ nhiệm nếu bạn cần điều chỉnh quyền hoặc gặp sự cố khi truy cập dữ liệu.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('../../partials/app-footer') %>

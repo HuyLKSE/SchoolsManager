@@ -1,0 +1,486 @@
+<%- include('../partials/dashboard-layout-header', { title: 'Điểm danh' }) %>
+
+  <div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold font-serif text-gray-900">Điểm danh</h1>
+        <p class="text-gray-500 mt-1">Quản lý chuyên cần học sinh theo lớp</p>
+      </div>
+      <div
+        class="flex items-center gap-2 text-sm font-medium text-gray-500 bg-white px-4 py-2 border border-gray-300 shadow-sm">
+        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <span>Hôm nay: <span id="todayLabel" class="text-gray-900 font-bold"></span></span>
+      </div>
+    </div>
+
+    <!-- Selection Card - Squared Modern -->
+    <div class="bg-white border border-gray-200 border-l-4 border-l-indigo-500 p-6 shadow-sm">
+      <form id="selectForm" class="grid gap-6 lg:grid-cols-4 items-end">
+        <div class="space-y-2">
+          <label class="text-sm font-bold text-gray-900">Lớp học</label>
+          <div class="relative">
+            <select name="classId" id="classSelect"
+              class="form-control w-full rounded-xl border-gray-200 bg-gray-50 focus:bg-white transition-colors appearance-none py-2.5 pl-4 pr-10"
+              required>
+              <option value="">-- Chọn lớp --</option>
+            </select>
+            <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-text-muted">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-sm font-bold text-gray-900">Ngày</label>
+          <input type="date" name="date" id="dateInput"
+            class="form-control w-full rounded-xl border-gray-200 bg-gray-50 focus:bg-white transition-colors py-2.5 px-4"
+            required />
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-sm font-bold text-gray-900">Buổi học</label>
+          <div class="relative">
+            <select name="session" id="sessionSelect"
+              class="form-control w-full rounded-xl border-gray-200 bg-gray-50 focus:bg-white transition-colors appearance-none py-2.5 pl-4 pr-10">
+              <option value="Cả ngày">Cả ngày</option>
+              <option value="Sáng">Buổi sáng</option>
+              <option value="Chiều">Buổi chiều</option>
+            </select>
+            <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-text-muted">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit"
+          class="btn bg-blue-600 text-white hover:bg-blue-700 justify-center py-2.5 rounded-xl font-medium shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all border-none">
+          Tải danh sách
+        </button>
+      </form>
+    </div>
+
+    <!-- Class Info & Stats (Hidden by default) -->
+    <div id="classInfo" class="hidden grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <!-- Class Name Card -->
+      <div class="bg-gradient-to-br from-blue-600 to-cyan-500 rounded-2xl p-5 text-white shadow-lg shadow-blue-500/20">
+        <p class="text-blue-100 text-xs font-bold uppercase tracking-wider mb-1">Lớp học</p>
+        <div class="flex items-end justify-between">
+          <h3 class="text-2xl font-bold font-display" id="className">--</h3>
+          <span class="text-sm bg-white/20 px-2 py-1 rounded-lg backdrop-blur-sm">Sĩ số: <strong
+              id="studentCount">0</strong></span>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="bg-white/80 backdrop-blur-sm border border-blue-50 rounded-2xl p-5 shadow-sm">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="p-2 bg-green-50 text-green-600 rounded-lg">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Có mặt</p>
+        </div>
+        <p class="text-2xl font-bold text-gray-900" id="summaryPresent">0</p>
+      </div>
+
+      <div class="bg-white/80 backdrop-blur-sm border border-blue-50 rounded-2xl p-5 shadow-sm">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="p-2 bg-red-50 text-red-600 rounded-lg">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+          <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Vắng</p>
+        </div>
+        <p class="text-2xl font-bold text-gray-900" id="summaryAbsent">0</p>
+      </div>
+
+      <div class="bg-white/80 backdrop-blur-sm border border-blue-50 rounded-2xl p-5 shadow-sm">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="p-2 bg-amber-50 text-amber-600 rounded-lg">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Muộn/Sớm</p>
+        </div>
+        <p class="text-2xl font-bold text-gray-900" id="summaryLate">0</p>
+      </div>
+    </div>
+
+    <!-- Attendance Table -->
+    <div id="attendanceTableContainer"
+      class="hidden bg-white/80 backdrop-blur-sm border border-blue-50 rounded-2xl shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-blue-50/50 border-b border-blue-100 text-xs font-bold text-blue-900 uppercase tracking-wider">
+              <th class="px-6 py-4 w-16 text-center">STT</th>
+              <th class="px-6 py-4 w-32">Mã HS</th>
+              <th class="px-6 py-4">Họ tên</th>
+              <th class="px-6 py-4 w-48">Trạng thái</th>
+              <th class="px-6 py-4">Ghi chú</th>
+            </tr>
+          </thead>
+          <tbody id="attendanceList" class="divide-y divide-border">
+            <!-- Rows will be injected here -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Actions Footer -->
+      <% if (user && user.hasPermission && (user.hasPermission('canCreate') || user.hasPermission('canUpdate'))) { %>
+        <div class="p-4 border-t border-blue-100 bg-blue-50/30 flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-2">
+            <span id="saveStatus" class="text-xs font-medium text-text-muted hidden flex items-center gap-1">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              Đã lưu
+            </span>
+            <p id="attendanceDraftInfo" class="hidden text-xs text-text-muted italic"></p>
+          </div>
+          <div class="flex gap-3">
+            <button type="button" class="btn bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 shadow-sm"
+              onclick="markAllPresent()">
+              Đánh dấu tất cả có mặt
+            </button>
+            <button type="button" class="btn btn-success shadow-lg shadow-green-500/20" onclick="saveAttendance()">
+              Lưu điểm danh
+            </button>
+          </div>
+        </div>
+        <% } %>
+    </div>
+  </div>
+
+  <script>
+    const userPermissions = {
+      canCreate: <%= user && user.hasPermission && user.hasPermission('canCreate') ? 'true' : 'false' %>,
+      canUpdate: <%= user && user.hasPermission && user.hasPermission('canUpdate') ? 'true' : 'false' %>,
+        canDelete: <%= user && user.hasPermission && user.hasPermission('canDelete') ? 'true' : 'false' %>,
+  };
+
+    const attendanceStatusOptions = [
+      { value: 'present', label: 'Có mặt', class: 'text-green-700 bg-green-50' },
+      { value: 'absent_excused', label: 'Vắng có phép', class: 'text-red-700 bg-red-50' },
+      { value: 'absent_unexcused', label: 'Vắng không phép', class: 'text-red-700 bg-red-50 font-bold' },
+      { value: 'late', label: 'Đi muộn', class: 'text-amber-700 bg-amber-50' },
+      { value: 'left_early', label: 'Về sớm', class: 'text-amber-700 bg-amber-50' },
+    ];
+
+    const legacyStatusMap = {
+      'Có mặt': 'present',
+      'Vắng có phép': 'absent_excused',
+      'Vắng không phép': 'absent_unexcused',
+      'Đi muộn': 'late',
+      'Về sớm': 'left_early',
+    };
+
+    const summaryValues = {
+      present: document.getElementById('summaryPresent'),
+      absent: document.getElementById('summaryAbsent'),
+      late: document.getElementById('summaryLate'),
+    };
+
+    const draftInfoEl = document.getElementById('attendanceDraftInfo');
+    const saveStatusEl = document.getElementById('saveStatus');
+    const DRAFT_PREFIX = 'attendanceDraft:';
+    let currentDraftKey = null;
+    let isDirty = false;
+    let lastSavedAt = null;
+
+    // Initialize
+    const today = new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    document.getElementById('todayLabel').textContent = today;
+    document.getElementById('dateInput').valueAsDate = new Date();
+
+    document.getElementById('selectForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await loadAttendance();
+    });
+
+    loadClasses();
+
+    async function loadClasses() {
+      try {
+        const res = await fetch('/api/v1/classes?limit=200', { credentials: 'include' });
+        if (!res.ok) return;
+        const data = await res.json();
+        const select = document.getElementById('classSelect');
+        data.data.forEach((c) => {
+          const option = document.createElement('option');
+          option.value = c._id;
+          option.textContent = `${c.className} • Khối ${c.grade}`;
+          select.appendChild(option);
+        });
+      } catch (error) {
+        console.warn('Không thể tải danh sách lớp');
+      }
+    }
+
+    async function loadAttendance() {
+      const classId = document.getElementById('classSelect').value;
+      const date = document.getElementById('dateInput').value;
+      const session = document.getElementById('sessionSelect').value;
+      if (!classId || !date) return;
+
+      // Show loading state if needed
+
+      try {
+        const res = await fetch(`/api/v1/attendance/list?classId=${classId}&date=${date}&session=${session}`, {
+          credentials: 'include',
+        });
+        if (!res.ok) throw new Error('Failed');
+        const data = await res.json();
+        renderAttendance(data);
+
+        // Update draft key
+        currentDraftKey = getDraftKey(classId, date, session);
+        restoreDraft();
+
+      } catch (error) {
+        window.showToast?.('Không thể tải danh sách điểm danh', 'error');
+      }
+    }
+
+    function normalizeStatus(value) {
+      if (!value) return 'present';
+      return legacyStatusMap[value] || value;
+    }
+
+    function renderAttendance(data) {
+      const info = document.getElementById('classInfo');
+      const tableWrap = document.getElementById('attendanceTableContainer');
+      const list = document.getElementById('attendanceList');
+
+      document.getElementById('className').textContent = data.class?.className || '--';
+      document.getElementById('studentCount').textContent = data.students?.length || 0;
+
+      list.innerHTML = data.students.map((student, index) => {
+        const record = data.attendance.find((a) => a.student === student._id);
+        const status = normalizeStatus(record?.status);
+        const note = record?.note || '';
+
+        return `
+        <tr class="hover:bg-gray-50 transition-colors group">
+          <td class="px-6 py-4 text-center text-text-muted font-mono text-sm">${index + 1}</td>
+          <td class="px-6 py-4 text-text-muted font-mono text-sm">${student.studentCode || '--'}</td>
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+              <div class="h-8 w-8 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center text-xs font-bold">
+                ${student.fullName.charAt(0).toUpperCase()}
+              </div>
+              <span class="font-semibold text-text-dark">${student.fullName}</span>
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <div class="relative">
+              <select class="status-select form-control w-full rounded-lg text-sm py-2 pl-3 pr-8 appearance-none cursor-pointer transition-colors ${getStatusColorClass(status)}" 
+                data-id="${student._id}" 
+                ${!userPermissions.canCreate && !userPermissions.canUpdate ? 'disabled' : ''}>
+                ${attendanceStatusOptions.map(opt =>
+          `<option value="${opt.value}" ${opt.value === status ? 'selected' : ''}>${opt.label}</option>`
+        ).join('')}
+              </select>
+              <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-current opacity-70">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <input type="text" 
+              class="note-input form-control w-full rounded-lg text-sm border-transparent bg-transparent hover:bg-white hover:border-border focus:bg-white focus:border-primary-500 transition-all placeholder-gray-300" 
+              data-id="${student._id}" 
+              value="${note}" 
+              placeholder="Thêm ghi chú..." 
+              ${!userPermissions.canCreate && !userPermissions.canUpdate ? 'readonly disabled' : ''}>
+          </td>
+        </tr>
+      `;
+      }).join('');
+
+      info.classList.remove('hidden');
+      tableWrap.classList.remove('hidden');
+
+      // Initial summary update
+      updateSummary(collectRecords());
+      attachFieldListeners();
+    }
+
+    function getStatusColorClass(status) {
+      const opt = attendanceStatusOptions.find(o => o.value === status);
+      return opt ? opt.class : 'text-gray-700 bg-gray-50';
+    }
+
+    function attachFieldListeners() {
+      document.querySelectorAll('.status-select').forEach((select) => {
+        select.addEventListener('change', (e) => {
+          // Update color immediately
+          e.target.className = `status-select form-control w-full rounded-lg text-sm py-2 pl-3 pr-8 appearance-none cursor-pointer transition-colors ${getStatusColorClass(e.target.value)}`;
+          handleFieldChange();
+        });
+      });
+      document.querySelectorAll('.note-input').forEach((input) => {
+        input.addEventListener('input', handleFieldChange);
+      });
+    }
+
+    function handleFieldChange() {
+      const records = collectRecords();
+      updateSummary(records);
+      setDirty(true);
+      persistDraftDebounced(records);
+    }
+
+    function collectRecords() {
+      return Array.from(document.querySelectorAll('.status-select')).map((select) => {
+        const id = select.dataset.id;
+        const note = document.querySelector(`.note-input[data-id="${id}"]`)?.value || '';
+        return { student: id, status: select.value, note };
+      });
+    }
+
+    function updateSummary(records) {
+      const counts = { present: 0, absent: 0, late: 0 };
+      records.forEach((record) => {
+        if (record.status === 'present') {
+          counts.present += 1;
+        } else if (record.status === 'absent_excused' || record.status === 'absent_unexcused') {
+          counts.absent += 1;
+        } else {
+          counts.late += 1;
+        }
+      });
+      summaryValues.present.textContent = counts.present;
+      summaryValues.absent.textContent = counts.absent;
+      summaryValues.late.textContent = counts.late;
+    }
+
+    function markAllPresent() {
+      document.querySelectorAll('.status-select').forEach((select) => {
+        select.value = 'present';
+        select.className = `status-select form-control w-full rounded-lg text-sm py-2 pl-3 pr-8 appearance-none cursor-pointer transition-colors ${getStatusColorClass('present')}`;
+      });
+      handleFieldChange();
+    }
+
+    async function saveAttendance() {
+      const classId = document.getElementById('classSelect').value;
+      const date = document.getElementById('dateInput').value;
+      const session = document.getElementById('sessionSelect').value;
+
+      const records = collectRecords();
+
+      try {
+        const res = await fetch('/api/v1/attendance/mark', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ classId, date, session, records }),
+        });
+        if (!res.ok) throw new Error('Failed');
+
+        window.showToast?.('Lưu điểm danh thành công', 'success');
+        lastSavedAt = new Date();
+        setDirty(false);
+
+        // Clear draft
+        if (currentDraftKey) localStorage.removeItem(currentDraftKey);
+        updateDraftInfo('');
+
+      } catch (error) {
+        window.showToast?.('Không thể lưu điểm danh', 'error');
+      }
+    }
+
+    // Draft Logic
+    function getDraftKey(classId, date, session) {
+      return `${DRAFT_PREFIX}${classId}:${date}:${session}`;
+    }
+
+    function persistDraft(records) {
+      if (!currentDraftKey || !Array.isArray(records) || !records.length) return;
+      try {
+        localStorage.setItem(currentDraftKey, JSON.stringify({ records, updatedAt: Date.now() }));
+        updateDraftInfo('Đã lưu nháp tự động');
+      } catch (error) {
+        console.warn('Draft save failed', error);
+      }
+    }
+
+    const persistDraftDebounced = debounce((records) => persistDraft(records), 1000);
+
+    function restoreDraft() {
+      if (!currentDraftKey) return;
+      try {
+        const raw = localStorage.getItem(currentDraftKey);
+        if (!raw) {
+          updateDraftInfo('');
+          return;
+        }
+        const draft = JSON.parse(raw);
+        if (Array.isArray(draft.records)) {
+          draft.records.forEach((record) => {
+            const select = document.querySelector(`.status-select[data-id="${record.student}"]`);
+            const noteInput = document.querySelector(`.note-input[data-id="${record.student}"]`);
+            if (select) {
+              select.value = record.status;
+              select.className = `status-select form-control w-full rounded-lg text-sm py-2 pl-3 pr-8 appearance-none cursor-pointer transition-colors ${getStatusColorClass(record.status)}`;
+            }
+            if (noteInput) noteInput.value = record.note || '';
+          });
+          updateDraftInfo(`Khôi phục nháp lúc ${new Date(draft.updatedAt).toLocaleTimeString('vi-VN')}`);
+          setDirty(true);
+          updateSummary(collectRecords());
+        }
+      } catch (error) {
+        console.warn('Draft restore failed', error);
+      }
+    }
+
+    function updateDraftInfo(message) {
+      if (!draftInfoEl) return;
+      if (!message) {
+        draftInfoEl.classList.add('hidden');
+        draftInfoEl.textContent = '';
+        return;
+      }
+      draftInfoEl.textContent = message;
+      draftInfoEl.classList.remove('hidden');
+    }
+
+    function setDirty(flag) {
+      isDirty = flag;
+      if (!saveStatusEl) return;
+      if (flag) {
+        saveStatusEl.innerHTML = '<span class="text-amber-500">● Chưa lưu</span>';
+        saveStatusEl.classList.remove('hidden');
+      } else if (lastSavedAt) {
+        saveStatusEl.innerHTML = `<span class="text-green-600 flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg> Đã lưu ${lastSavedAt.toLocaleTimeString('vi-VN')}</span>`;
+        saveStatusEl.classList.remove('hidden');
+      } else {
+        saveStatusEl.classList.add('hidden');
+      }
+    }
+
+    function debounce(fn, delay = 300) {
+      let timeout;
+      return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn.apply(null, args), delay);
+      };
+    }
+  </script>
+
+  <%- include('../partials/dashboard-layout-footer') %>

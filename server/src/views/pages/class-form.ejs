@@ -1,0 +1,340 @@
+<%- include('../partials/dashboard-layout-header', { title }) %>
+
+<section class="space-y-6">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <a href="/classes" class="p-2 hover:bg-gray-100 rounded-lg">
+        <%- icon('arrow-left', 'h-5 w-5') %>
+      </a>
+      <div>
+        <p class="text-sm text-text-muted uppercase tracking-wide">
+          <%= mode === 'edit' ? 'Cập nhật' : 'Tạo mới' %> lớp học
+        </p>
+        <h1 class="text-2xl font-bold"><%= title %></h1>
+      </div>
+    </div>
+  </div>
+
+  <% const permissionKey = mode === 'create' ? 'canCreate' : 'canUpdate'; %>
+  <% const hasPermission = user && user.hasPermission && user.hasPermission(permissionKey); %>
+  <% if (!hasPermission) { %>
+    <div class="border border-amber-300 bg-amber-50 text-amber-900 p-4 rounded-xl flex items-start gap-3">
+      <%- icon('shield-exclamation', 'h-6 w-6 flex-shrink-0') %>
+      <div>
+        <p class="font-semibold">Chế độ chỉ xem</p>
+        <p class="text-sm">
+          Bạn chưa có quyền <%= permissionKey %> nên không thể <%= mode === 'create' ? 'tạo' : 'chỉnh sửa' %> lớp học.
+          Vui lòng liên hệ quản trị viên để được cấp quyền.
+        </p>
+      </div>
+    </div>
+  <% } %>
+
+  <div class="grid gap-6 lg:grid-cols-3">
+    <div class="lg:col-span-2 space-y-4">
+      <div id="formAlert" class="hidden rounded-xl border p-4 text-sm"></div>
+
+      <div class="bg-white rounded-2xl shadow-sm p-6">
+        <form id="classForm" class="space-y-6" onsubmit="handleSubmit(event)">
+          <div class="grid gap-4 md:grid-cols-2">
+            <div>
+              <label class="form-label">Tên lớp *</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                class="form-control"
+                placeholder="Nhập tên lớp"
+                autocomplete="off"
+                required
+              >
+            </div>
+            <div>
+              <label class="form-label">Mã lớp *</label>
+              <input
+                type="text"
+                id="classCode"
+                name="classCode"
+                class="form-control uppercase"
+                placeholder="Nhập mã lớp"
+                autocomplete="off"
+                required
+              >
+            </div>
+            <div>
+              <label class="form-label">Khối *</label>
+              <select id="grade" name="grade" class="form-control" required>
+                <option value="10">Khối 10</option>
+                <option value="11">Khối 11</option>
+                <option value="12">Khối 12</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Năm học *</label>
+              <input
+                type="text"
+                id="academicYear"
+                name="academicYear"
+                class="form-control"
+                placeholder="Nhập năm học (VD: 2024-2025)"
+                autocomplete="off"
+                required
+              >
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-2">
+            <div>
+              <label class="form-label">Sĩ số tối đa *</label>
+              <input type="number" id="capacity" name="capacity" min="1" class="form-control" required>
+            </div>
+            <div>
+              <label class="form-label">Phòng học</label>
+              <input type="text" id="classroom" name="classroom" class="form-control" placeholder="VD: Phòng 402">
+            </div>
+            <div>
+              <label class="form-label">Giáo viên chủ nhiệm (ID)</label>
+              <input type="text" id="homeroomTeacher" name="homeroomTeacher" class="form-control" placeholder="Nhập tên giáo viên">
+            </div>
+            <div>
+              <label class="form-label">Trạng thái *</label>
+              <select id="status" name="status" class="form-control" required></select>
+            </div>
+          </div>
+
+          <div>
+            <label class="form-label">Ghi chú</label>
+            <textarea id="notes" name="notes" rows="4" class="form-control" placeholder="Thông tin thêm về lớp học..."></textarea>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button type="submit" id="submitBtn" class="btn btn-primary">
+              <%= mode === 'edit' ? 'Lưu thay đổi' : 'Tạo lớp học' %>
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="window.location.href='/classes'">Huỷ</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+      <div class="space-y-4">
+        <div id="workspaceInfoCard" class="bg-white rounded-2xl shadow-sm p-6">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <p class="text-sm font-semibold text-text-dark">Workspace lớp</p>
+              <p class="text-xs text-text-muted">Tự động khởi tạo sau khi bạn lưu lớp.</p>
+            </div>
+            <span id="workspaceStatusBadge" class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">
+              Chưa tạo
+            </span>
+          </div>
+          <dl class="mt-4 space-y-3 text-sm" id="workspaceDetails">
+            <div>
+              <dt class="text-[11px] uppercase tracking-wide text-text-muted">Mã workspace</dt>
+              <dd id="workspaceCode" class="font-mono text-base text-text-dark">--</dd>
+            </div>
+            <div>
+              <dt class="text-[11px] uppercase tracking-wide text-text-muted">Đường dẫn</dt>
+              <dd id="workspacePath" class="font-mono text-[13px] text-text-muted break-all">--</dd>
+            </div>
+            <div>
+              <dt class="text-[11px] uppercase tracking-wide text-text-muted">Thuộc</dt>
+              <dd id="workspaceParent" class="text-text-dark">--</dd>
+            </div>
+          </dl>
+          <p id="workspaceMessage" class="mt-3 text-xs text-text-muted"></p>
+        </div>
+        <div class="rounded-2xl bg-gradient-to-br from-primary-50 to-secondary-50 p-4 text-xs text-text-dark">
+          <p class="font-semibold flex items-center gap-2">
+            <%- icon('shield-check', 'h-4 w-4 text-primary-500') %>
+            Lưu ý đồng bộ
+          </p>
+          <p class="mt-1 text-text-muted">
+            Workspace giúp phân tách dữ liệu giữa các trường/lớp. Nếu chưa có workspace, hãy hoàn tất form và lưu lớp.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const mode = '<%= mode %>';
+  const classId = '<%= classId || '' %>';
+  const canSubmit = <%= hasPermission ? 'true' : 'false' %>;
+  const statusOptions = ['Đang hoạt động', 'Đã kết thúc', 'Tạm ngưng'];
+
+  const form = document.getElementById('classForm');
+  const alertBox = document.getElementById('formAlert');
+  const workspaceStatusBadge = document.getElementById('workspaceStatusBadge');
+  const workspaceCodeEl = document.getElementById('workspaceCode');
+  const workspacePathEl = document.getElementById('workspacePath');
+  const workspaceParentEl = document.getElementById('workspaceParent');
+  const workspaceMessageEl = document.getElementById('workspaceMessage');
+  const workspaceStatusBase = 'inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold';
+  const submitBtn = document.getElementById('submitBtn');
+
+  document.addEventListener('DOMContentLoaded', () => {
+    renderStatusOptions();
+    setDefaultAcademicYear();
+    updateWorkspacePanel();
+
+    if (mode === 'edit' && classId) {
+      loadClassData();
+    }
+
+    if (!canSubmit) {
+      disableForm();
+    }
+  });
+
+  function renderStatusOptions() {
+    const select = document.getElementById('status');
+    select.innerHTML = statusOptions
+      .map(status => `<option value="${status}">${status}</option>`)
+      .join('');
+  }
+
+  function setDefaultAcademicYear() {
+    const input = document.getElementById('academicYear');
+    if (!input.value) {
+      const now = new Date();
+      const year = now.getFullYear();
+      input.value = `${year}-${year + 1}`;
+    }
+  }
+
+  function updateWorkspacePanel(workspace) {
+    const isSynced = workspace && workspace.code;
+    if (!workspaceStatusBadge) return;
+
+    if (!isSynced) {
+      workspaceStatusBadge.className = `${workspaceStatusBase} bg-gray-100 text-gray-600`;
+      workspaceCodeEl.textContent = '--';
+      workspacePathEl.textContent = '--';
+      workspaceParentEl.textContent = '--';
+      workspaceMessageEl.textContent =
+        mode === 'create'
+          ? 'Workspace sẽ được tạo ngay sau khi bạn lưu lớp học này.'
+          : 'Workspace chưa được đồng bộ. Hãy lưu lại lớp học để kích hoạt.';
+      return;
+    }
+
+    workspaceStatusBadge.className = `${workspaceStatusBase} bg-emerald-100 text-emerald-700`;
+    workspaceCodeEl.textContent = workspace.code || '--';
+    workspacePathEl.textContent = workspace.path || '--';
+    workspaceParentEl.textContent = workspace.parentWorkspaceId
+      ? `Parent: #${String(workspace.parentWorkspaceId).slice(-6).toUpperCase()}`
+      : 'Thuộc workspace trường';
+    workspaceMessageEl.textContent = 'Workspace đã sẵn sàng cho việc audit và phân tách dữ liệu.';
+  }
+
+  function disableForm() {
+    form.querySelectorAll('input, select, textarea, button[type="submit"]').forEach(el => {
+      el.disabled = true;
+      el.classList.add('opacity-70');
+    });
+  }
+
+  function showAlert(type, message) {
+    alertBox.className = 'rounded-xl border p-4 text-sm';
+    if (type === 'success') {
+      alertBox.classList.add('border-emerald-200', 'bg-emerald-50', 'text-emerald-900');
+    } else {
+      alertBox.classList.add('border-red-200', 'bg-red-50', 'text-red-900');
+    }
+    alertBox.textContent = message;
+    alertBox.classList.remove('hidden');
+  }
+
+  async function loadClassData() {
+    try {
+      showAlert('success', 'Đang tải thông tin lớp học...');
+      const res = await fetch(`/api/v1/classes/${classId}`, { credentials: 'include' });
+      if (!res.ok) {
+        throw new Error('Không tải được dữ liệu lớp học');
+      }
+      const result = await res.json();
+      populateForm(result.data);
+      alertBox.classList.add('hidden');
+    } catch (error) {
+      showAlert('error', error.message);
+    }
+  }
+
+  function populateForm(data) {
+    document.getElementById('name').value = data.name || data.className || '';
+    document.getElementById('classCode').value = data.classCode || '';
+    document.getElementById('grade').value = data.grade || '10';
+    document.getElementById('academicYear').value = data.academicYear || '';
+    document.getElementById('capacity').value = data.capacity || 40;
+    document.getElementById('classroom').value = data.classroom || '';
+    document.getElementById('homeroomTeacher').value = data.homeroomTeacher?._id || '';
+    document.getElementById('status').value = data.status || statusOptions[0];
+    document.getElementById('notes').value = data.notes || '';
+    updateWorkspacePanel(data.workspace);
+  }
+
+  function collectFormData() {
+    const payload = {
+      name: document.getElementById('name').value.trim(),
+      classCode: document.getElementById('classCode').value.trim().toUpperCase(),
+      grade: parseInt(document.getElementById('grade').value, 10),
+      academicYear: document.getElementById('academicYear').value.trim(),
+      capacity: document.getElementById('capacity').value
+        ? parseInt(document.getElementById('capacity').value, 10)
+        : undefined,
+      classroom: document.getElementById('classroom').value.trim() || undefined,
+      homeroomTeacher: document.getElementById('homeroomTeacher').value.trim() || undefined,
+      status: document.getElementById('status').value,
+      notes: document.getElementById('notes').value.trim() || undefined,
+    };
+
+    if (!payload.homeroomTeacher) delete payload.homeroomTeacher;
+    if (!payload.classroom) delete payload.classroom;
+    if (!payload.notes) delete payload.notes;
+
+    return payload;
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    if (!canSubmit) return;
+
+    const payload = collectFormData();
+    submitBtn.disabled = true;
+    submitBtn.classList.add('opacity-70');
+    showAlert('success', mode === 'create' ? 'Đang tạo lớp học...' : 'Đang lưu thay đổi...');
+
+    try {
+      const endpoint = mode === 'create' ? '/api/v1/classes' : `/api/v1/classes/${classId}`;
+      const method = mode === 'create' ? 'POST' : 'PUT';
+      const res = await fetch(endpoint, {
+        method,
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await res.json();
+      if (!res.ok) {
+        throw new Error(result.error?.message || 'Thao tác thất bại');
+      }
+
+      showAlert(
+        'success',
+        mode === 'create' ? 'Tạo lớp học thành công - workspace đã sẵn sàng.' : 'Cập nhật lớp học thành công.'
+      );
+      setTimeout(() => {
+        window.location.href = '/classes';
+      }, 1200);
+    } catch (error) {
+      showAlert('error', error.message);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.classList.remove('opacity-70');
+    }
+  }
+</script>
+
+<%- include('../partials/dashboard-layout-footer') %>

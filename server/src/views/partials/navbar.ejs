@@ -1,0 +1,179 @@
+<nav class="sticky top-0 z-30 w-full bg-white/80 backdrop-blur-xl border-b border-blue-100 transition-all duration-300">
+    <div class="px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <!-- Left: Mobile Menu Trigger & Title -->
+            <div class="flex items-center gap-4">
+                <button id="mobile-menu-btn"
+                    class="p-2 rounded-xl text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+
+                <div class="flex items-center gap-3 lg:hidden">
+                    <img src="/images/logo-schoolm.png" alt="SchoolM Logo" class="h-8 w-8 object-contain" />
+                    <span class="font-bold text-gray-900 font-serif text-xl">SchoolM</span>
+                </div>
+
+                <!-- Desktop Title -->
+                <div class="hidden lg:flex items-center">
+                    <h1 class="text-xl font-bold text-gray-800 font-serif">
+                        <%= typeof title !=='undefined' ? title : '' %>
+                    </h1>
+                </div>
+            </div>
+
+            <!-- Right: Actions & User Menu -->
+            <div class="flex items-center gap-3 sm:gap-4">
+                <!-- Notifications (Placeholder) -->
+                <button
+                    class="relative p-2 text-gray-400 hover:text-blue-600 transition-colors rounded-xl hover:bg-blue-50">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    <span
+                        class="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white animate-pulse"></span>
+                </button>
+
+                <!-- User Menu -->
+                <div class="relative" id="qlhs-user-menu">
+                    <button id="qlhs-user-btn"
+                        class="flex items-center gap-2 p-1 rounded-full hover:bg-blue-50 transition-colors border border-transparent hover:border-blue-100">
+                        <div
+                            class="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold shadow-md shadow-blue-500/20">
+                            <%= user && user.name ? user.name.charAt(0).toUpperCase() : 'U' %>
+                        </div>
+                        <div class="hidden md:block text-left mr-1">
+                            <p class="text-xs font-bold text-gray-700 leading-none">
+                                <%= user ? user.name : 'User' %>
+                            </p>
+                            <p class="text-[10px] text-gray-500 leading-none mt-0.5">
+                                <%= user ? user.role : 'Guest' %>
+                            </p>
+                        </div>
+                        <svg class="w-4 h-4 text-gray-400 hidden sm:block" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <!-- Dropdown -->
+                    <div id="qlhs-user-dropdown"
+                        class="hidden absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl shadow-blue-900/10 border border-blue-100 py-2 transform origin-top-right transition-all duration-200 opacity-0 scale-95 ring-1 ring-black ring-opacity-5">
+                        <div class="px-4 py-3 border-b border-gray-50">
+                            <p class="text-sm font-semibold text-gray-900 truncate">
+                                <%= user ? user.name : 'User' %>
+                            </p>
+                            <p class="text-xs text-gray-500 truncate">
+                                <%= user ? user.email : '' %>
+                            </p>
+                        </div>
+
+                        <div class="py-1">
+                            <a href="/profile"
+                                class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                Hồ sơ cá nhân
+                            </a>
+                            <a href="/settings"
+                                class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                Cài đặt
+                            </a>
+                            <% if (user && (user.englishProfile?.enabled || user.role==='admin' || user.role==='teacher'
+                                )) { const pathStr=(typeof currentPath==='string' ) ? currentPath : '' ; const
+                                isEnglishMode=pathStr.startsWith('/english'); const switchLink=isEnglishMode
+                                ? '/dashboard' : '/english/dashboard' ; const switchLabel=isEnglishMode
+                                ? 'School Management' : 'English Learning' ; %>
+                                <a href="<%= switchLink %>"
+                                    class="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50 hover:text-blue-700 transition-colors font-medium">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                    </svg>
+                                    <%= switchLabel %>
+                                </a>
+                                <% } %>
+                        </div>
+
+                        <div class="border-t border-gray-50 py-1">
+                            <button onclick="handleLogout()"
+                                class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors text-left">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                </svg>
+                                Đăng xuất
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.getElementById('qlhs-user-btn');
+        const dropdown = document.getElementById('qlhs-user-dropdown');
+        const mobileBtn = document.getElementById('mobile-menu-btn');
+        const sidebar = document.getElementById('sidebar');
+
+        // Toggle User Dropdown
+        if (btn && dropdown) {
+            btn.addEventListener('click', () => {
+                if (dropdown.classList.contains('hidden')) {
+                    dropdown.classList.remove('hidden');
+                    setTimeout(() => {
+                        dropdown.classList.remove('opacity-0', 'scale-95');
+                        dropdown.classList.add('opacity-100', 'scale-100');
+                    }, 10);
+                } else {
+                    closeDropdown();
+                }
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
+                    closeDropdown();
+                }
+            });
+
+            function closeDropdown() {
+                dropdown.classList.remove('opacity-100', 'scale-100');
+                dropdown.classList.add('opacity-0', 'scale-95');
+                setTimeout(() => {
+                    dropdown.classList.add('hidden');
+                }, 200);
+            }
+        }
+
+        // Mobile Menu Toggle
+        if (mobileBtn && sidebar) {
+            mobileBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+            });
+
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth < 1024) { // lg breakpoint
+                    if (!sidebar.contains(e.target) && !mobileBtn.contains(e.target)) {
+                        sidebar.classList.add('-translate-x-full');
+                    }
+                }
+            });
+        }
+    });
+</script>

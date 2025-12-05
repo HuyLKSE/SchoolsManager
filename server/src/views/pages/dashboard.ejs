@@ -1,0 +1,264 @@
+<%- include('../partials/dashboard-layout-header', { title: 'Tổng quan' }) %>
+
+  <div class="space-y-6">
+    <!-- Welcome Section - Squared Modern -->
+    <div
+      class="relative overflow-hidden border-t-4 border-t-blue-600 bg-gradient-to-r from-blue-600 to-cyan-500 p-8 text-white shadow-md">
+      <div class="relative z-10">
+        <h2 class="text-4xl font-bold font-serif mb-2 text-white tracking-tight">Xin chào, <%= user ? user.name
+            : 'Thầy/Cô' %>!</h2>
+        <p class="text-blue-100 text-lg">Chúc bạn một ngày làm việc hiệu quả.</p>
+      </div>
+      <div class="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-white/10 to-transparent"></div>
+      <div class="absolute -bottom-10 -right-10 h-64 w-64 bg-white/10 blur-3xl"></div>
+    </div>
+
+    <!-- Stats Grid - Modern Squared -->
+    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <!-- Students Stat -->
+      <div
+        class="group relative overflow-hidden border border-gray-200 border-l-4 border-l-blue-600 bg-white p-6 shadow-sm transition-all hover:shadow-md">
+        <div class="flex items-center justify-between mb-4">
+          <div
+            class="bg-blue-50 p-3 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          </div>
+          <span class="text-xs font-bold uppercase tracking-wider text-gray-400">Học sinh</span>
+        </div>
+        <div>
+          <p class="text-4xl font-serif text-black" id="totalStudents">--</p>
+          <p class="mt-1 text-sm text-text-muted flex items-center gap-1">
+            <span id="studentsTrend" class="font-medium text-gray-500">Đang tải...</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Classes Stat -->
+      <div
+        class="group relative overflow-hidden border border-gray-200 border-l-4 border-l-cyan-500 bg-white p-6 shadow-sm transition-all hover:shadow-md">
+        <div class="flex items-center justify-between mb-4">
+          <div
+            class="bg-cyan-50 p-3 text-cyan-600 group-hover:bg-cyan-600 group-hover:text-white transition-colors duration-300">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 14l9-5-9-5-9 5 9 5z M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+            </svg>
+          </div>
+          <span class="text-xs font-bold uppercase tracking-wider text-gray-400">Lớp học</span>
+        </div>
+        <div>
+          <p class="text-4xl font-serif text-black" id="totalClasses">--</p>
+          <p class="mt-1 text-sm text-gray-500" id="classesTrend">Đang tải...</p>
+        </div>
+      </div>
+
+      <!-- Finance Stat -->
+      <div
+        class="group relative overflow-hidden border border-gray-200 border-l-4 border-l-amber-500 bg-white p-6 shadow-sm transition-all hover:shadow-md">
+        <div class="flex items-center justify-between mb-4">
+          <div
+            class="bg-amber-50 p-3 text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-colors duration-300">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <span class="text-xs font-bold uppercase tracking-wider text-gray-400">Công nợ</span>
+        </div>
+        <div>
+          <p class="text-4xl font-serif text-black" id="outstandingFees">--</p>
+          <p class="mt-1 text-sm text-gray-500" id="overdueChip">Đang tải...</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-3">
+      <!-- Main Content Area -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Recent Activity / Quick Actions Placeholder -->
+        <div class="border border-gray-200 border-l-4 border-l-green-500 bg-white p-6 shadow-sm">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-2xl font-serif text-gray-900">Hoạt động gần đây</h3>
+            <button class="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline">Xem tất cả</button>
+          </div>
+          <div class="space-y-4">
+            <!-- Placeholder Items -->
+            <div
+              class="flex items-center gap-4 p-4 border-l-2 border-l-gray-300 bg-gray-50 border border-gray-100 hover:bg-gray-100 transition-colors">
+              <div class="h-10 w-10 bg-white flex items-center justify-center text-black border border-gray-200">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-black">Học sinh mới đăng ký</p>
+                <p class="text-xs text-gray-500">Nguyễn Văn A vừa được thêm vào hệ thống</p>
+              </div>
+              <span class="ml-auto text-xs text-gray-400">2 phút trước</span>
+            </div>
+
+            <div
+              class="flex items-center gap-4 p-4 rounded-2xl bg-gray-50 border border-gray-100 hover:bg-gray-100 transition-colors">
+              <div
+                class="h-10 w-10 rounded-full bg-white flex items-center justify-center text-black border border-gray-200">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-black">Điểm danh hoàn tất</p>
+                <p class="text-xs text-gray-500">Lớp 10A1 đã hoàn thành điểm danh sáng nay</p>
+              </div>
+              <span class="ml-auto text-xs text-gray-400">1 giờ trước</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar Widgets -->
+      <div class="space-y-6">
+        <!-- Calendar Widget -->
+        <div class="border border-gray-200 border-l-4 border-l-purple-500 bg-white p-6 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-2xl font-serif text-gray-900">Lịch học</h3>
+            <span class="px-2 py-1 bg-gray-100 text-xs font-bold text-gray-600 border border-gray-200">Tháng <%= new
+                Date().getMonth() + 1 %></span>
+          </div>
+          <div class="grid grid-cols-7 gap-1 text-center text-xs font-bold text-gray-400 mb-2">
+            <span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span>
+          </div>
+          <div class="grid grid-cols-7 gap-1 text-center text-sm">
+            <% for (let i=1; i <=30; i++) { %>
+              <div
+                class="aspect-square flex items-center justify-center <%= i === new Date().getDate() ? 'bg-blue-600 text-white border-2 border-blue-700' : 'hover:bg-blue-50 text-gray-500 border border-transparent' %> cursor-pointer transition-colors">
+                <%= i %>
+              </div>
+              <% } %>
+          </div>
+        </div>
+
+        <!-- Upcoming Classes -->
+        <div class="border border-gray-200 border-l-4 border-l-indigo-500 bg-white p-6 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-2xl font-serif text-gray-900">Sắp diễn ra</h3>
+          </div>
+          <div class="space-y-3" id="upcomingClasses">
+            <div class="flex flex-col items-center justify-center py-8 text-gray-400">
+              <svg class="w-10 h-10 mb-2 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p class="text-sm">Chưa có lớp học sắp tới</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const numberFormatter = new Intl.NumberFormat('vi-VN');
+    const currencyFormatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
+
+    loadStats();
+
+    async function loadStats() {
+      // Initial loading state handled by HTML
+      try {
+        await Promise.all([
+          loadStudentStats(),
+          loadClassAndAttendanceStats(),
+          loadFinanceStats(),
+        ]);
+      } catch (error) {
+        console.warn('Không thể tải thống kê dashboard:', error);
+      }
+    }
+
+    async function loadStudentStats() {
+      try {
+        const res = await fetch('/api/v1/students?limit=1', { credentials: 'include' });
+        if (!res.ok) throw new Error('Students API error');
+        const data = await res.json();
+        const total = data.meta?.total || 0;
+        setText('totalStudents', numberFormatter.format(total));
+        setText('studentsTrend', 'Tổng học sinh');
+      } catch (error) {
+        console.warn('Student stats error:', error);
+        setText('studentsTrend', 'Không thể tải');
+      }
+    }
+
+    async function loadClassAndAttendanceStats() {
+      try {
+        const res = await fetch('/api/v1/classes?limit=1', { credentials: 'include' });
+        if (!res.ok) throw new Error('Classes API error');
+        const data = await res.json();
+        const total = data.meta?.total || 0;
+        setText('totalClasses', numberFormatter.format(total));
+      } catch (error) {
+        console.warn('Class stats error:', error);
+        setText('classesTrend', 'Không thể tải lớp');
+      }
+
+      try {
+        const today = new Date().toISOString().split('T')[0];
+        const res = await fetch(`/api/v1/attendance?date=${today}&limit=1000`, { credentials: 'include' });
+        if (!res.ok) throw new Error('Attendance API error');
+        const data = await res.json();
+        const records = data.data || [];
+        const presentCount = records.filter((record) => record.status === 'present').length;
+        const totalMarked = records.length;
+        const attendanceRate = totalMarked ? ((presentCount / totalMarked) * 100).toFixed(1) : '--';
+        setText(
+          'classesTrend',
+          totalMarked ? `Chuyên cần: ${attendanceRate}%` : 'Chưa có dữ liệu điểm danh'
+        );
+      } catch (error) {
+        console.warn('Attendance snapshot error:', error);
+        setText('classesTrend', 'Không có dữ liệu chuyên cần');
+      }
+    }
+
+    async function loadFinanceStats() {
+      try {
+        const res = await fetch('/api/v1/payments/statistics/financial', { credentials: 'include' });
+        if (!res.ok) throw new Error('Payments API error');
+        const payload = await res.json();
+        const stats = payload.data || {};
+        const overview = stats.overview || {};
+        const outstanding = Math.max(0, (overview.totalDue || 0) - (overview.totalPaid || 0));
+        setText('outstandingFees', formatCurrency(outstanding));
+
+        const statusStats = stats.paymentStatusStats || [];
+        const overdueCount = statusStats.find((item) => item._id === 'Quá hạn')?.count || 0;
+        const unpaidCount = statusStats.find((item) => item._id === 'Chưa thanh toán')?.count || 0;
+        setText('overdueChip', `${overdueCount} quá hạn • ${unpaidCount} chưa thu`);
+      } catch (error) {
+        console.warn('Finance stats error:', error);
+        setText('outstandingFees', '--');
+        setText('overdueChip', 'Không có dữ liệu');
+      }
+    }
+
+    function setText(id, text) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.textContent = text;
+      }
+    }
+
+    function formatCurrency(value) {
+      if (typeof value !== 'number' || Number.isNaN(value)) {
+        return '--';
+      }
+      return currencyFormatter.format(value);
+    }
+  </script>
+
+  <%- include('../partials/dashboard-layout-footer') %>
