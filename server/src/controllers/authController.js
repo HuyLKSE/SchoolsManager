@@ -11,12 +11,13 @@ import * as SchoolService from '../services/schoolService.js';
 import * as UserService from '../services/userService.js';
 import { ensureSchoolWorkspace } from '../services/workspaceService.js';
 import { withTransactionRetry } from '../utils/transaction.js';
+import logger from '../config/logger.js';
 
 export const register = async (req, res) => {
   try {
     const { username, email, password, fullName, schoolName, requestedRole } = req.body;
 
-    console.log('📥 Register Request:', { username, email, fullName, schoolName, requestedRole });
+    logger.info('📥 Register Request', { username, email, fullName, schoolName, requestedRole });
 
     return await withTransactionRetry(async (session) => {
       // 1. Find or create school
@@ -31,7 +32,7 @@ export const register = async (req, res) => {
         // If it's a service function, it should be called from SchoolService
         await ensureSchoolWorkspace(school, session);
       } catch (workspaceError) {
-        console.error('Ensure school workspace failed:', workspaceError);
+        logger.error('Ensure school workspace failed:', workspaceError);
         // Throwing error here implies transaction abort
         throw new Error('Khong the khoi tao workspace cho truong');
       }
@@ -106,7 +107,7 @@ export const register = async (req, res) => {
       );
     });
   } catch (error) {
-    console.error('Register error:', error);
+    logger.error('Register error:', error);
     // If errorResponse was already returned inside transaction, we need to handle that.
     // However, withTransactionRetry expects callback to return the result.
     // If we return response inside callback, it passes through.
@@ -132,13 +133,13 @@ export const login = async (req, res) => {
     const { username, password, schoolName } = req.body;
 
     // Find school (Multi-tenant isolation)
-    console.log('Login attempt:', { username, schoolName });
+    logger.info('Login attempt', { username, schoolName });
     const school = await School.findOne({
       schoolName: { $regex: new RegExp(`^${schoolName.trim()}$`, 'i') }
     });
 
     if (!school) {
-      console.log('School not found:', schoolName);
+      logger.info('School not found:', { schoolName });
       return errorResponse(res, 'Truong khong ton tai trong he thong', 'SCHOOL_NOT_FOUND', 404);
     }
 
@@ -155,21 +156,21 @@ export const login = async (req, res) => {
 
     // Check if user exists in this school
     if (!user) {
-      console.log('User not found in school:', { username, schoolId: school._id });
+      logger.info('User not found in school', { username, schoolId: school._id });
       return errorResponse(res, 'Email hoac ten dang nhap khong ton tai trong truong nay', 'USER_NOT_FOUND', 401);
     }
 
     // Check if account is active
     if (!user.isActive) {
-      console.log('User inactive:', username);
+      logger.info('User inactive:', { username });
       return errorResponse(res, 'Tai khoan da bi vo hieu hoa. Lien he quan tri vien', 'ACCOUNT_DISABLED', 401);
     }
 
     // Verify password (kiểm tra mật khẩu trong database)
-    console.log(`Verifying password for ${username}. Received length: ${password.length}, Stored hash start: ${user.password.substring(0, 10)}`);
+    // removed password logging for security
     const isValidPassword = await user.comparePassword(password);
     if (!isValidPassword) {
-      console.log(`Invalid password for user: '${username}'`);
+      logger.info(`Invalid password for user: '${username}'`);
       return errorResponse(res, 'Mat khau khong dung', 'INVALID_PASSWORD', 401);
     }
 
@@ -304,7 +305,7 @@ export const logout = async (req, res) => {
     // Return success response - client will redirect to /login
     return successResponse(res, { redirectTo: '/login' }, 'Dang xuat thanh cong');
   } catch (error) {
-    console.error('Logout error:', error);
+    logger.error('Logout error:', error);
     return errorResponse(res, 'Loi khi dang xuat', 'LOGOUT_ERROR', 500);
   }
 };
